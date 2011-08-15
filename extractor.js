@@ -158,10 +158,14 @@ Transformer = function (src) {
  * and a callback scrape the content from the document.
  * cleaner and transform functions will be applied if supplied.
  * @param pathname - the path (local or url) to the document to be processed
- * @param selectors - the jQuery selectors of interest
+ * @param selectors - an object with properties that are populated by  jQuery 
+ * selectors.  (e.g. selectors = { title: 'title', body = '.main_content'}
+ * would yeild an object with title and body properties based on the jQuery
+ * selectors passed)
  * @param cleaner_func (optional) - a function to cleaup the document BEFORE
  * processing with jQuery
- * @param transformer_func (optional) - a function to transform the scraped content
+ * @param transformer_func (optional) - a function to transform the scraped
+ * content
  */
 Scrape = function (pathname, selectors, callback, cleaner_func, transformer_func) {
 	if (typeof callback !== 'function') {
