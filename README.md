@@ -11,10 +11,10 @@ Periodically I wind up scripting some screen scraping.  Node is really nice for 
 
 extractor has four methods -
 
-	* FetchPage - get a page from the local file system or via http/https
-	* Cleaner - do some basic cleanup of the html document. This can be overwritten by passing your own cleaner function to Scrape().
-	* Transformer - a simple function that strips font tags from the content. Can be overwritten by passing your own transformer function to Scrape.
-	* Scrape - A combination of FetchPage(), Cleaner(), and Transformer() which fetches the content, parses it via jsDOM/jQuery and extracting interesting parts based on the jQuery selectors pass to it creating an object with the same structure as the selector object and passing it to Scrape()'s callback method. You can override the Cleaner() and Transformer() methods by passing in your own cleaner and transformer functions.
+* FetchPage - get a page from the local file system or via http/https
+* Cleaner - do some basic cleanup of the html document. This can be overwritten by passing your own cleaner function to Scrape().
+* Transformer - a simple function that strips font tags from the content. Can be overwritten by passing your own transformer function to Scrape.
+* Scrape - A combination of FetchPage(), Cleaner(), and Transformer() which fetches the content, parses it via jsDOM/jQuery and extracting interesting parts based on the jQuery selectors pass to it creating an object with the same structure as the selector object and passing it to Scrape()'s callback method. You can override the Cleaner() and Transformer() methods by passing in your own cleaner and transformer functions.
 
 # Example
 
