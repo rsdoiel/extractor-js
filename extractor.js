@@ -144,11 +144,13 @@ Cleaner = function (html) {
 
 /**
  * Transformer - an example transformer function (e.g. strip pesky font tags content tags)
- * @param html
+ * @param ky - the property name you're transforming up (this is a convience field so
+ * one function can process each property uniquely if necessary)
+ * @param val - the value needing the trasnformation 
  * @return transformed markup
  */
-Transformer = function (src) {
-	return src.replace(/<\/p>/mgi,'').replace(/<font\s+[\w|'|"|\s|=|,|-]*>/igm,'').replace(/<\/font>/gmi,'').replace(/<spacer\s+[\w|'|"|\s|=|,|-]*>/igm,'').replace(/<\/spacer>/gmi,'').replace(/<body>/gmi,'').replace(/<\/body>/gmi,'');
+Transformer = function (ky, val) {
+	return val.replace(/<\/p>/mgi,'').replace(/<font\s+[\w|'|"|\s|=|,|-]*>/igm,'').replace(/<\/font>/gmi,'').replace(/<spacer\s+[\w|'|"|\s|=|,|-]*>/igm,'').replace(/<\/spacer>/gmi,'').replace(/<body>/gmi,'').replace(/<\/body>/gmi,'');
 } /* END: Transformer() */
 
 
@@ -205,9 +207,9 @@ Scrape = function (pathname, selectors, callback, cleaner_func, transformer_func
 							val = window.jQuery(selectors[ky]).html();
 							if (val) {
 								if (transformer_func === undefined) {
-									output[ky] = Transformer(val);
+									output[ky] = Transformer(ky, val);
 								} else {
-									output[ky] = transform_func(val);
+									output[ky] = transform_func(ky, val);
 								}
 							} else {
 								output[ky] = '';
