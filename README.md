@@ -30,7 +30,7 @@ extractor has four methods -
 	
 	for (i = 0; i < pages.length; i += 1) {
 		page = pages[i];
-		extractor(page, selector, function (err, data, page_name) {
+		extractor.Scrape(page, selector, function (err, data, page_name) {
 			if (err) throw err;
 			
 			console.log("Processed " + page_name);
