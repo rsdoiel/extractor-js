@@ -6,7 +6,7 @@ var sys = require('sys'),
     assert = require('assert'),
     extractor = require('./extractor');
 
-console.log("Starting [extractor-test] ... " + new Date());
+console.log("Starting [extractor-test.js] ... " + new Date());
 extractor.FetchPage('./README.md', function (err, data, pname) {
     assert.ok(! err, "Should not get an error for reading README.md from the application directory.");
     assert.ok(data.toString().indexOf("# Overview"), "Should get a data buffer back from README.md");
@@ -29,8 +29,10 @@ var doc = [
 
 extractor.Scrape(doc, map, function (err, data, pname) {
     assert.ok(! err, "Should  not get an error. " + err);
-    assert.ok(typeof data === 'object', "Should have a data object");
     assert.equal(pname, 'source code', "Should have pname set to 'source code'");
+    assert.ok(typeof data === 'object', "Should have a data object");
+    assert.equal(data.title, "Test 1", "Title should be 'Test 1': " + sys.inspect(data));
+    assert.equal(data.h1, "H! of Test 1", "h1 should be 'H1 of Test 1': " + sys.inspect(data));    
 });
 console.log("Success! " + new Date());
 
