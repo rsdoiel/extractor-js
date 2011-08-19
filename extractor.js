@@ -16,8 +16,8 @@ var	url = require('url'),
 	path = require('path'),
 	http = require('http'),
 	https = require('https'),
-	jsdom = require('jsdom'),
-	jquery = fs.readFileSync("./jquery-1.5.js").toString();
+	jsdom = require('jsdom');
+	//jquery = fs.readFileSync("./jquery-1.5.js").toString();
 
 
 /**
@@ -164,25 +164,39 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 		try {
 			jsdom.env({
 				html: src,
-				src : [ jquery ],
+				//src : [ jquery ],
 				done : function(err, window) {
 					if (err) {
 						return callback(err, null, pname);
+					}
+					
+					// These are temporary until jsDom supports real querySelector() and
+					// querySelectorAll()
+					if (window.document.querySelector === undefined) {
+						window.document.querySelector = function (selector) {
+							switch (selector.substr(0,1)) {
+								case '#':
+									return window.document.getElementById(selector.substr(1));
+								case '.':
+									return (window.document.getElementsByClassName(selector.substr(1)))[0];
+								default:
+									return (window.document.getElementsByTagName(selector))[0];
+							}
+						};
 					}
 					var ky = "",
 						output = {},
 						val;
 					for (ky in selectors) {
-						val = window.jQuery(selectors[ky]).html();
+						// FIXME: need to handle cases of NodeList and single Nodes
+						val = window.document.querySelector(selectors[ky]);
 						if (val) {
 							if (transformer === undefined) {
-								output[ky] = val;
+								output[ky] = val.innerHTML;
+							} else {
+								output[ky] = transform(ky, val.innerHTML);
 							}
-							else {
-								output[ky] = transform(ky, val);
-							}
-						}
-						else {
+						} else {
 							output[ky] = '';
 						}
 					}
