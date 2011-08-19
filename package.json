@@ -1,6 +1,6 @@
 {
 	"name" : "extractor-js",
-	"version" : "0.0.1",
+	"version" : "0.0.2",
 	"description" : "A small utility library for fetching and scraping web content.",
 	"author"
 	"main" : "./extractor.js",
