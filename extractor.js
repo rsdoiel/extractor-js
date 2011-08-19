@@ -11,13 +11,13 @@
  * See: http://opensource.org/licenses/bsd-license.php
  *
  */
-var url = require('url'),
-	path = require('path'),
+var	url = require('url'),
 	fs = require('fs'),
+	path = require('path'),
 	http = require('http'),
 	https = require('https'),
 	jsdom = require('jsdom'),
-	jquery = fs.readFileSync('lib/jquery-1.5.js').toString();
+	jquery = fs.readFileSync("./jquery-1.5.js").toString();
 
 
 /**
@@ -117,7 +117,7 @@ FetchPage = function(pathname, callback) {
 				}
 			});
 			}).on("error", function(err) {
-			return callback(err, null, pathname);
+				return callback(err, null, pathname);
 			});
 			break;
 		default:
@@ -125,36 +125,6 @@ FetchPage = function(pathname, callback) {
 		}
 	}
 }; /* END: FetchPage() */
-
-
-/**
- * Cleaner - default/example cleaner function.
- * @param html - the original html to clean
- * @return - cleaned html out
- */
-Cleaner = function(html) {
-	// NOTES: This RegExp is used to clear up some
-	// nasty, probably Word, cut and paste.
-	re65533 = new RegExp(String.fromCharCode(65533), "gm");
-	// Perform some safe cleanup so jsDom can 
-	// make a successful parse of things.
-	// FIXME: This should be setup as a function that
-	// can be replace as needed for specific scraping problems
-	// may be call this cleanup()
-	return html.toString().replace(/\r/gm, "").replace(/\s<\s/gm, ' &lt; ').replace(/\s>\s/gm, ' &gt; ').replace(/&#133;/gm, '...').replace(/&#145;/gm, "&#8216;").replace(/&#146;/gm, "&#8217;").replace(/&#147;/gm, '&#8220;').replace(/&#148;/gm, '&#8221;').replace(/&#150;/gm, '&#8211;').replace(/&#151;/gm, '&#8212;').replace(re65533, '');
-}; /* END: Cleaner() */
-
-
-/**
- * Transformer - an example transformer function (e.g. strip pesky font tags content tags)
- * @param ky - the property name you're transforming up (this is a convience field so
- * one function can process each property uniquely if necessary)
- * @param val - the value needing the trasnformation 
- * @return transformed markup
- */
-Transformer = function(ky, val) {
-	return val.replace(/<\/p>/mgi, '').replace(/<font\s+[\w|'|"|\s|=|,|\-]*>/igm, '').replace(/<\/font>/gmi, '').replace(/<spacer\s+[\w|'|"|\s|=|,|\-]*>/igm, '').replace(/<\/spacer>/gmi, '').replace(/<body>/gmi, '').replace(/<\/body>/gmi, '');
-}; /* END: Transformer() */
 
 
 /**
@@ -238,6 +208,36 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 		});
 	}
 }; /* END: Scrape() */
+
+/**
+ * Cleaner - default/example cleaner function.
+ * @param html - the original html to clean
+ * @return - cleaned html out
+ */
+Cleaner = function(html) {
+	// NOTES: This RegExp is used to clear up some
+	// nasty, probably Word, cut and paste.
+	re65533 = new RegExp(String.fromCharCode(65533), "gm");
+	// Perform some safe cleanup so jsDom can 
+	// make a successful parse of things.
+	// FIXME: This should be setup as a function that
+	// can be replace as needed for specific scraping problems
+	// may be call this cleanup()
+	return html.toString().replace(/\r/gm, "").replace(/\s<\s/gm, ' &lt; ').replace(/\s>\s/gm, ' &gt; ').replace(/&#133;/gm, '...').replace(/&#145;/gm, "&#8216;").replace(/&#146;/gm, "&#8217;").replace(/&#147;/gm, '&#8220;').replace(/&#148;/gm, '&#8221;').replace(/&#150;/gm, '&#8211;').replace(/&#151;/gm, '&#8212;').replace(re65533, '');
+}; /* END: Cleaner() */
+
+
+/**
+ * Transformer - an example transformer function (e.g. strip pesky font tags content tags)
+ * @param ky - the property name you're transforming up (this is a convience field so
+ * one function can process each property uniquely if necessary)
+ * @param val - the value needing the trasnformation 
+ * @return transformed markup
+ */
+Transformer = function(ky, val) {
+	return val.replace(/<\/p>/mgi, '').replace(/<font\s+[\w|'|"|\s|=|,|\-]*>/igm, '').replace(/<\/font>/gmi, '').replace(/<spacer\s+[\w|'|"|\s|=|,|\-]*>/igm, '').replace(/<\/spacer>/gmi, '').replace(/<body>/gmi, '').replace(/<\/body>/gmi, '');
+}; /* END: Transformer() */
+
 
 exports.Cleaner = Cleaner;
 exports.Transformer = Transformer;

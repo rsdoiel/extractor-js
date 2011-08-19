@@ -1,10 +1,9 @@
 {
-	"name" : "extractor-js",
+	"name" : "extractor",
 	"version" : "0.0.2",
 	"description" : "A small utility library for fetching and scraping web content.",
 	"main" : "./extractor.js",
-	"directories" : { "lib" : "./lib" },
-	"repository" : { 
+	"repository" : {
 		"type" : "git", 
 		"url" : "https://github.com/rsdoiel/extractor-js.git"
 	},
@@ -13,14 +12,22 @@
 		"email" : "rsdoiel@gmail.com", 
 		"url" : "https://github.com/rsdoiel"
 	},
+	"maintainers" : [{
+		"name" : "R. S. Doiel", 
+		"url" : "https://github.com/rsdoiel"
+	}],
 	"engines" : {
 		"node" : "0.4 || 0.5",
 		"npm" : "1"
 	},
 	"dependencies" : {
-		"jsdom" : ">= 0.2.1"
+		"jsdom" : ">= 0.2.1",
+		"jquery" : "1.5.1"
 	},
 	"scripts" : {
 		"test" : "node extractor-test.js"
-	}
+	},
+	"bugs": {
+		"web": "http://github.com/rsdoiel/extractor-js/issues"
+    	}
 }

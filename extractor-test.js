@@ -37,7 +37,7 @@ TESTS.FetchPage = function() {
 	    assert.ok(data.toString().indexOf("# Overview"), "Should get a data buffer back from README.md");
 	    assert.equal(pname, './README.md', "Should have pname set to README.md");
 	    test_completed += 1;
-	    display("Finished FetchPage tests. " + test_completed + "/" + test_expected);
+	    display("Finished FetchPage tests (" + test_completed + "/" + test_expected + ")");
 	});
 	
 	return 1;// One test in the batch
@@ -65,7 +65,7 @@ TESTS.Scrape = function () {
 	    assert.equal(data.title, "Test 1", "Title should be 'Test 1': " + JSON.stringify(data));
 	    assert.equal(data.h1, "H1 of Test 1", "h1 should be 'H1 of Test 1': " + JSON.stringify(data));
 	    test_completed += 1;
-	    display("Scrape test, completed processing: " + pname);
+	    display("Scrape test, completed processing (" + test_completed + "/" + test_expected + ") : " + pname);
 	});
 
 	extractor.Scrape(doc, map, function (err, data, pname) {
@@ -75,7 +75,7 @@ TESTS.Scrape = function () {
 	    assert.equal(data.title, "Test 1", "Title should be 'Test 1': " + JSON.stringify(data));
 	    assert.equal(data.h1, "H1 of Test 1", "h1 should be 'H1 of Test 1': " + JSON.stringify(data));
 	    test_completed += 1;
-	    display("Scrape test, completed processing: " + doc);
+	    display("Scrape test, completed processing (" + test_completed + "/" + test_expected + ") : markup");
 	});
 	return 2;// Two tests in this batch
 };
