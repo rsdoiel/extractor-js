@@ -21,8 +21,7 @@
 		"npm" : "1"
 	},
 	"dependencies" : {
-		"jsdom" : ">= 0.2.1",
-		"jquery" : "1.5.1"
+		"jsdom" : ">= 0.2.1"
 	},
 	"scripts" : {
 		"test" : "node extractor-test.js"
