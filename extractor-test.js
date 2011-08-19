@@ -2,7 +2,7 @@
  * extractor-test.js - the tests cases for extractor.js
  */
  
-var sys = requre('sys'),
+var sys = require('sys'),
     assert = require('assert'),
     extractor = require('./extractor');
 
