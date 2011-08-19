@@ -2,7 +2,7 @@
  * extractor-test.js - the tests cases for extractor.js
  */
  
- var sys = requre('sys'),
+var sys = requre('sys'),
     assert = require('assert'),
     extractor = require('./extractor');
 
@@ -11,6 +11,7 @@ extractor.FetchPage('./README.md', function (err, data, pname) {
     assert.ok(data.indexOf("# Overview"), "Should get a data buffer back from README.md");
     assert.equal(pname, './README.md', "Should have pname set to README.md");
 });
+
 
 var doc = [
     "<!DOCTYPE html>",
@@ -30,3 +31,4 @@ extractor.Scrape(doc, map, function (err, data, pname) {
     assert.ok(typeof data === 'object', "Should have a data object");
     assert.equal(pname, 'source code', "Should have pname set to 'source code'");
 });
+
