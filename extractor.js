@@ -151,7 +151,7 @@ Cleaner = function (html) {
  */
 Transformer = function (ky, val) {
 	return val.replace(/<\/p>/mgi,'').replace(/<font\s+[\w|'|"|\s|=|,|-]*>/igm,'').replace(/<\/font>/gmi,'').replace(/<spacer\s+[\w|'|"|\s|=|,|-]*>/igm,'').replace(/<\/spacer>/gmi,'').replace(/<body>/gmi,'').replace(/<\/body>/gmi,'');
-} /* END: Transformer() */
+}; /* END: Transformer() */
 
 
 /**
@@ -159,7 +159,7 @@ Transformer = function (ky, val) {
  * an object of selectors (an object of key/selector strings),
  * and a callback scrape the content from the document.
  * cleaner and transform functions will be applied if supplied.
- * @param pathname - the path (local or url) to the document to be processed
+ * @param document - the path (local or url) to the document to be processed, or HTML source code
  * @param selectors - an object with properties that are populated by  jQuery 
  * selectors.  (e.g. selectors = { title: 'title', body = '.main_content'}
  * would yeild an object with title and body properties based on the jQuery
@@ -169,27 +169,22 @@ Transformer = function (ky, val) {
  * @param transformer_func (optional) - a function to transform the scraped
  * content
  */
-Scrape = function (pathname, selectors, callback, cleaner_func, transformer_func) {
+Scrape = function (document, selectors, callback, cleaner_func, transformer_func) {
 	if (typeof callback !== 'function') {
-		throw ("Scrape() callback is not a function");
+		throw ("callback is not a function");
 	}
 
 	if (typeof selectors !== 'object') {
 		throw("selectors is not an object");
 	}
 
-	if (typeof pathname !== 'string') {
-		throw("pathname is not a string");
+	if (typeof document !== 'string') {
+		throw("document is not a string");
 	}
-
-	FetchPage(pathname, function (err, html, pname) {
-		if (err) {
-			return callback(err, null, pname);
-		} else {
-		    if (cleaner === undefined) {
-		    	src = Cleaner(html);
-		    } else {
-		    	src = cleaner(html);
+    
+    ScrapeIt = function (src) {
+    	    if (cleaner_func !== undefined) {
+		    	src = cleaner_func(src);
 		    }
 			try {
 				jsdom.env({
@@ -203,18 +198,16 @@ Scrape = function (pathname, selectors, callback, cleaner_func, transformer_func
 						output = {},
 						val;
 					for (ky in selectors) {
-						(function(ky, selectors) {
 							val = window.jQuery(selectors[ky]).html();
 							if (val) {
 								if (transformer_func === undefined) {
-									output[ky] = Transformer(ky, val);
+									output[ky] = val;
 								} else {
 									output[ky] = transform_func(ky, val);
 								}
 							} else {
 								output[ky] = '';
 							}
-						})(ky, selectors);
 					}
 	
 					return callback(null, output, pname);
@@ -222,8 +215,21 @@ Scrape = function (pathname, selectors, callback, cleaner_func, transformer_func
 			} catch(err) {
 				return callback("DOM processing error: " + err, null, pname);
 			}
-		}
-	});
+    }; // END ScrapeIt()
+
+    // If pathname is a path or URL then fetch a page, otherwise process
+    // it as the HTML src.
+    if (document.indexOf('<') !== false) {
+        ScrapeIt(document, 'source code');
+    } else {
+        FetchPage(document, function (err, html, pname) {
+	    	if (err) {
+		    	return callback(err, null, pname);
+    		} else {
+                ScrapeIt(html, pname);
+		    }
+    	});
+    }
 }; /* END: Scrape() */
 
 exports.FetchPage = FetchPage;
