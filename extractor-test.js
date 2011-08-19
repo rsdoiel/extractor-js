@@ -8,7 +8,7 @@ var sys = require('sys'),
 
 extractor.FetchPage('./README.md', function (err, data, pname) {
     assert.ok(! err, "Should not get an error for reading README.md from the application directory.");
-    assert.ok(data.indexOf("# Overview"), "Should get a data buffer back from README.md");
+    assert.ok(data.toString().indexOf("# Overview"), "Should get a data buffer back from README.md");
     assert.equal(pname, './README.md', "Should have pname set to README.md");
 });
 
