@@ -64,7 +64,7 @@ TESTS.Scrape1 = function () {
 		    "<title>Test 1</title>",
 		    "</head>",
 		    "<body>",
-		    "<div class='title'><h2>H2 title</h2> This is more title</div>",
+		    "<div class='title'><h2>h2 Title</h2> This is more title</div>",
 		    "<div class='article'>This is where an article would go.</div>",
 		    "</body>",
 		    "</html>"
