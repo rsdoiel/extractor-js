@@ -8,7 +8,7 @@ revision 0.0.5
 Periodically I wind up scripting some screen scraping or spidering sites to check links.  Node is really nice for this.
 extractor-js is a couple of utility methods I've found I reuse allot in these types of script.
 
-## Four methods
+## Three methods
 
 extractor has two methods -
 
