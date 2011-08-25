@@ -136,7 +136,7 @@ FetchPage = function(pathname, callback) {
 			return callback("ERROR: unsupported protocol for " + pathname, null, pathname);
 		}
 	}
-}; /* END: FetchPage() */
+}; /* END: FetchPage(pathname, callback) */
 
 
 /**
@@ -169,6 +169,82 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 		throw ("document or path is not a string");
 	}
 
+	var makeItem = function(elem, ky) {
+		var val = {};
+		if (elem.attr) {
+			// Here's a list of possibly 
+			// interesting attributes to extract.
+			if (elem.attr('name')) {
+				val.name = elem.attr('name');
+			}
+			if (elem.attr('value')) {
+				val.value = elem.attr('value');
+			}
+			if (elem.attr('type')) {
+				val.type = elem.attr('type');
+			}
+			if (elem.attr('id')) {
+				val.id = elem.attr('id');
+			}
+			if (elem.attr('class')) {
+				val['class'] = elem.attr('class');
+			}
+			if (elem.attr('content')) {
+				val.content = elem.attr('content');
+			}
+			if (elem.attr('title')) {
+				val.title = elem.attr('title');
+			}
+			if (elem.attr('placeholder')) {
+				val.placeholder = elem.attr('placeholder');
+			}
+			if (elem.attr('contenteditable')) {
+				val.contenteditable = elem.attr('contenteditable');
+			}
+			if (elem.attr('checked')) {
+				val.checked = elem.attr('checked');
+			}
+			if (elem.attr('href')) {
+				val.href = elem.attr('href');
+			}
+			if (elem.attr('src')) {
+				val.src = elem.attr('src');
+			}
+			if (elem.attr('alt')) {
+				val.alt = elem.attr('alt');
+			}
+			if (elem.attr('style')) {
+				val.style = elem.attr('style');
+			}
+			if (elem.attr('method')) {
+				val.method = elem.attr('method');
+			}
+			if (elem.attr('action')) {
+				val.action = elem.attr('action');
+			}
+			if (elem.attr('rel')) {
+				val.rel = elem.attr('rel');
+			}
+			if (elem.attr('language')) {
+				val.language = elem.attr('language');
+			}
+			if (elem.attr('lang')) {
+				val.lang = elem.attr('lang');
+			}
+		}
+		if (elem.html) {
+			val.innerHTML = elem.html();
+		}
+		if (elem.text) {
+			val.text = elem.text();
+		}
+
+		if (transformer !== undefined) {
+			return transform(ky, val);
+		}
+		return val;
+	};// END: makeItem(elem, ky)
+
 	var ScrapeIt = function(src, pname) {
 		if (cleaner !== undefined) {
 			src = cleaner(src);
@@ -188,16 +264,14 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 						output = {},
 						val;
 					for (ky in selectors) {
-						
-						val = window.jQuery(selectors[ky]).html();
-						if (val) {
-							if (transformer === undefined) {
-								output[ky] = val;
-							} else {
-								output[ky] = transform(ky, val);
-							}
+						val = window.jQuery(selectors[ky]);
+						if (val.length > 1) {
+							output[ky] = [];
+							val.each(function(i, elem) {
+								output[ky][i] = makeItem(window.jQuery(elem), ky);
+							});
 						} else {
-							output[ky] = '';
+							output[ky] = makeItem(val, ky);
 						}
 					}
 					return callback(null, output, pname);
@@ -206,7 +280,7 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 		} catch (err) {
 			return callback("DOM processing error: " + err, null, pname);
 		}
-	}; // END ScrapeIt()
+	}; // END ScrapeIt(src, pname)
 
 	// If pathname is a path or URL then fetch a page, otherwise process
 	// it as the HTML src.
@@ -221,7 +295,7 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 			}
 		});
 	}
-}; /* END: Scrape() */
+}; /* END: Scrape(document_or_path, selectors, callback, cleaner, transformer) */
 
 exports.FetchPage = FetchPage;
 exports.Scrape = Scrape;

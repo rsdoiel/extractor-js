@@ -71,16 +71,16 @@ TESTS.Scrape1 = function () {
 	    ].join("\n"),
 	    map2a = { title: '.title > h2', article: '.article' },
 	    map2b = { title: 'div.title > h2', article: '.article'},
-        doc3 = '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n\n<html xmlns="http://www.w3.org/1999/xhtml">\n\t<head>\n\t\t<meta name="keywords" content="Test, One Two Three" />\n\t\t<title>Test Page</title>\n\t</head>\n\t<body>\n\t\t<div id="site-info">This is the site information</div>\n\t\t<ul>\n\t\t<li><img id="i1" src="one.jpg" alt="dummy image 1" /></li>\n\t\t<li><img id="i2" src="two.jpg" alt="dummy image 2" /></li>\n\t\t<li><img id="i3" src="three.jpg" alt="dummy image 3" /></li>\n\t</ul>\n</body>\n</html>',
-        map3 = { 
-    	    keywords:'meta[name="keywords"]', 
+		doc3 = '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n\n<html xmlns="http://www.w3.org/1999/xhtml">\n\t<head>\n\t\t<meta name="keywords" content="Test, One Two Three" />\n\t\t<title>Test Page</title>\n\t</head>\n\t<body>\n\t\t<div id="site-info">This is the site information</div>\n\t\t<ul>\n\t\t<li><img id="i1" src="one.jpg" alt="dummy image 1" /></li>\n\t\t<li><img id="i2" src="two.jpg" alt="dummy image 2" /></li>\n\t\t<li><img id="i3" src="three.jpg" alt="dummy image 3" /></li>\n\t</ul>\n</body>\n</html>',
+		map3 = { 
+    		    keywords:'meta[name="keywords"]', 
 		    title: "title",
 		    image1: "#i1",
 		    image2: "#i2",
 		    image3: "#i3",
 		    images: "img",
 		    site_info: "#site-info"
-	    };
+		};
 	
 	extractor.Scrape("./test-data/test-1.html", map, function (err, data, pname) {
 	    assert.ok(! err, "Should  not get an error. " + err);
@@ -122,14 +122,16 @@ TESTS.Scrape1 = function () {
 	    display("Scrape test, completed processing (" + test_completed + "/" + test_expected + ") : markup");
 	});
     
-    extractor.Scrape(doc3, map3, function (err, data, pname) {
-        assert.ok(! err, "Should not have an error: " + err);
-    	assert.equal(data.title.innerHTML, "Test Page", "Should have title: " + JSON.stringify(data));
+	extractor.Scrape(doc3, map3, function (err, data, pname) {
+		assert.ok(! err, "Should not have an error: " + err);
+		assert.equal(data.title.innerHTML, "Test Page", "Should have title: " + JSON.stringify(data));
 		assert.equal(data.keywords.content, "Test, One Two Three", "Should have keywords: Test, One Two Three -> " + JSON.stringify(data));
 		assert.equal(data.image1.src, "one.jpg", "Should have image one.jpg");
 		assert.equal(data.image1.alt, "dummy image 1", "Should have alt text for image1");
 		assert.equal(data.images[0].src, "one.jpg", "Should have image on in the first position of the array.");
-    });
+		test_completed += 1;
+		display("Scrape test, completed processing (" + test_completed + "/" + test_expected + ") : markup");
+	});
 	return 5;// Two tests in this batch
 };
 
