@@ -7,9 +7,11 @@
  *
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
+ * 
+ * revision 0.0.5
  */
 
-const TIMEOUT = 10;
+var TIMEOUT = 10;
 
 var sys = require('sys'),
     assert = require('assert'),
@@ -22,8 +24,10 @@ console.log("Starting [extractor-test.js] ... " + new Date());
 
 display = function(msg) {
 	if (msg === undefined) {
-		while(msg = output.shift()) {
+        msg = output.shift();
+		while(msg) {
 			console.log(msg);
+            msg = output.shift();
 		}
 	} else {
 		output.push(msg);
@@ -73,7 +77,7 @@ TESTS.Scrape1 = function () {
 	    map2b = { title: 'div.title > h2', article: '.article'},
 		doc3 = '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n\n<html xmlns="http://www.w3.org/1999/xhtml">\n\t<head>\n\t\t<meta name="keywords" content="Test, One Two Three" />\n\t\t<title>Test Page</title>\n\t</head>\n\t<body>\n\t\t<div id="site-info">This is the site information</div>\n\t\t<ul>\n\t\t<li><img id="i1" src="one.jpg" alt="dummy image 1" /></li>\n\t\t<li><img id="i2" src="two.jpg" alt="dummy image 2" /></li>\n\t\t<li><img id="i3" src="three.jpg" alt="dummy image 3" /></li>\n\t</ul>\n</body>\n</html>',
 		map3 = { 
-    		    keywords:'meta[name="keywords"]', 
+            keywords:'meta[name="keywords"]', 
 		    title: "title",
 		    image1: "#i1",
 		    image2: "#i2",
@@ -135,6 +139,9 @@ TESTS.Scrape1 = function () {
 	return 5;// Two tests in this batch
 };
 
+TESTS.testSpider = function () {
+    assert.ok(false,"Tests for Spider not written yet.");
+};
 
 // Run the tests and keep track of what passed
 for (ky in TESTS) {

@@ -13,6 +13,8 @@
  *
  * The embedded jQuery 1.5 is and is not covered by this copyright or license.
  * see http://www.jquery.com for details about jQuery.
+ * 
+ * revision 0.0.5
  */
 var	url = require('url'),
 	fs = require('fs'),
@@ -244,7 +246,7 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 		}
 		return val;
 	};// END: makeItem(elem, ky)
-
+    
 	var ScrapeIt = function(src, pname) {
 		if (cleaner !== undefined) {
 			src = cleaner(src);
@@ -267,6 +269,7 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 						val = window.jQuery(selectors[ky]);
 						if (val.length > 1) {
 							output[ky] = [];
+                            // FIXME: Do I need to remove the lambda function from the loop?
 							val.each(function(i, elem) {
 								output[ky][i] = makeItem(window.jQuery(elem), ky);
 							});
@@ -297,5 +300,16 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 	}
 }; /* END: Scrape(document_or_path, selectors, callback, cleaner, transformer) */
 
+
+/**
+ * Spider - extract links and assets urls from a page.
+ * @param document_or_path
+ * @return object with assets property and links property
+ */
+Spider = function (document_or_path) {
+    return false;// Paceholder until tests written
+}; // END: Spider(document_or_path);
+
 exports.FetchPage = FetchPage;
 exports.Scrape = Scrape;
+exports.Spider = Spider;
