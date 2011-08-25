@@ -19,7 +19,7 @@ the same structure as the selector object and passing it to Scrape()'s callback 
 and Transformer() methods by passing in your own cleaner and transformer functions.
 * Spider - a utily implementation of Scrape using a fixed map for anchors, links, scripts and image tags.
 
-# Example
+# Example (Scrape)
 
 	var extractor = require('extractor-js'),
 	pages  = ["http://example.com/article1.html", 
@@ -42,4 +42,25 @@ and Transformer() methods by passing in your own cleaner and transformer functio
 	}
 	
 
-This example script would process three pages from the pages array and output a console log of the processed page and a JSON representation of the content described by the selectors.
+This example script would process three pages from the pages array and output a console log of the processed page 
+and a JSON representation of the content described by the selectors.
+
+# Example (Spider)
+
+In this example we spider the homepage of the NodeJS website and list of the links found on the page.
+
+	var extractor = require('extractor');
+
+	var map = {title:'title', links: 'a' };
+
+	extractor.Scrape('http://nodejs.org', map, function(err, data, url) {
+		var i;
+		if (err) {
+			console.error("ERROR: " + err);
+		}
+		console.log("from -> "+ url);
+		console.log("data -> " + JSON.stringify(data));
+		for(i = 0; i < data.links.length; i += 1) {
+			console.log("Link " + i + ": " + data.links[i].href);
+		}
+	});
