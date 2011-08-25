@@ -171,7 +171,7 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 		throw ("document or path is not a string");
 	}
 
-	var makeItem = function(elem, ky) {
+	var makeItem = function(elem) {
 		var val = {};
 		if (elem.attr) {
 			// Here's a list of possibly 
@@ -241,11 +241,8 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 			val.text = elem.text();
 		}
 
-		if (transformer !== undefined) {
-			return transform(ky, val);
-		}
 		return val;
-	};// END: makeItem(elem, ky)
+	};// END: makeItem(elem)
     
 	var ScrapeIt = function(src, pname) {
 		if (cleaner !== undefined) {
@@ -264,17 +261,21 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 					
 					var ky = "",
 						output = {},
-						val;
+						val,
+						makeItems = function (i, elem) {
+							output[ky][i] = makeItem(window.jQuery(elem));
+						};
 					for (ky in selectors) {
 						val = window.jQuery(selectors[ky]);
 						if (val.length > 1) {
 							output[ky] = [];
-                            // FIXME: Do I need to remove the lambda function from the loop?
-							val.each(function(i, elem) {
-								output[ky][i] = makeItem(window.jQuery(elem), ky);
-							});
+							val.each(makeItems);
 						} else {
-							output[ky] = makeItem(val, ky);
+							output[ky] = makeItem(val);
+						}
+
+						if (transformer !== undefined) {
+							output[ky] = transform(ky, output[ky]);
 						}
 					}
 					return callback(null, output, pname);
