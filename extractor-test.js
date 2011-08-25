@@ -140,8 +140,13 @@ TESTS.Scrape1 = function () {
 };
 
 TESTS.Spider = function () {
-    console.error("WARNING Tests for Spider() and Spider() not written yet!");
-	test_completed += 1;
+	extractor.Spider("http://nodejs.org", function (err, data, pname) {
+		assert.ok(data.anchors, "Should have anchors in page.");
+		assert.ok(data.images, "Should have at least the logo in the page.");
+		assert.ok(data.links, "Should have some links to CSS at least.");
+		test_completed += 1;
+		display("Spider http://nodejs.org completed processing (" + test_completed + "/" + test_expected + ")");
+	});
     return 1;
 };
 

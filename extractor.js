@@ -303,12 +303,15 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 
 
 /**
- * Spider - extract links and assets urls from a page.
+ * Spider - extract anchors, images, links, and script urls from a page.
  * @param document_or_path
+ * @param callback - callback for when you have all your scraped content
+ * @param cleaner - optional function to cleanup source before Scraping
  * @return object with assets property and links property
  */
-Spider = function (document_or_path) {
-    return false;// Paceholder until tests written
+Spider = function (document_or_path, callback, cleaner) {
+	var map = {anchors: 'a', images: 'img', scripts: 'script', links:'link' };
+	Scrape(document_or_path, map, callback, cleaner);
 }; // END: Spider(document_or_path);
 
 exports.FetchPage = FetchPage;
