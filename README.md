@@ -50,9 +50,7 @@ In this example we spider the homepage of the NodeJS website and list of the lin
 
 	var extractor = require('extractor');
 
-	var map = {title:'title', links: 'a' };
-
-	extractor.Scrape('http://nodejs.org', map, function(err, data, url) {
+	extractor.Spider('http://nodejs.org', function(err, data, url) {
 		var i;
 		if (err) {
 			console.error("ERROR: " + err);
