@@ -31,15 +31,14 @@ and Transformer() methods by passing in your own cleaner and transformer functio
 		'article': '.main_copy'},
 		i = 0;
 	
-	for (i = 0; i < pages.length; i += 1) {
-		page = pages[i];
+	pages.forEach(function(page) {
 		extractor.Scrape(page, selector, function (err, data, page_name) {
 			if (err) throw err;
 			
 			console.log("Processed " + page_name);
 			console.log("Article record: " + JSON.stringify(data));
 		});
-	}
+	});
 	
 
 This example script would process three pages from the pages array and output a console log of the processed page 
