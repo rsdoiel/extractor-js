@@ -173,66 +173,18 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 
 	var makeItem = function(elem) {
 		var val = {};
+
 		if (elem.attr) {
 			// Here's a list of possibly 
 			// interesting attributes to extract.
-			if (elem.attr('name')) {
-				val.name = elem.attr('name');
-			}
-			if (elem.attr('value')) {
-				val.value = elem.attr('value');
-			}
-			if (elem.attr('type')) {
-				val.type = elem.attr('type');
-			}
-			if (elem.attr('id')) {
-				val.id = elem.attr('id');
-			}
-			if (elem.attr('class')) {
-				val['class'] = elem.attr('class');
-			}
-			if (elem.attr('content')) {
-				val.content = elem.attr('content');
-			}
-			if (elem.attr('title')) {
-				val.title = elem.attr('title');
-			}
-			if (elem.attr('placeholder')) {
-				val.placeholder = elem.attr('placeholder');
-			}
-			if (elem.attr('contenteditable')) {
-				val.contenteditable = elem.attr('contenteditable');
-			}
-			if (elem.attr('checked')) {
-				val.checked = elem.attr('checked');
-			}
-			if (elem.attr('href')) {
-				val.href = elem.attr('href');
-			}
-			if (elem.attr('src')) {
-				val.src = elem.attr('src');
-			}
-			if (elem.attr('alt')) {
-				val.alt = elem.attr('alt');
-			}
-			if (elem.attr('style')) {
-				val.style = elem.attr('style');
-			}
-			if (elem.attr('method')) {
-				val.method = elem.attr('method');
-			}
-			if (elem.attr('action')) {
-				val.action = elem.attr('action');
-			}
-			if (elem.attr('rel')) {
-				val.rel = elem.attr('rel');
-			}
-			if (elem.attr('language')) {
-				val.language = elem.attr('language');
-			}
-			if (elem.attr('lang')) {
-				val.lang = elem.attr('lang');
-			}
+			['name', 'value', 'type', 'id', 'class', 'content', 'title',
+			'placeholder', 'contenteditable', 'checked', 'selected', 'href',
+			'src', 'alt', 'style', 'method', 'action', 'rel', 'language',
+			'lang'].forEach(function(attr_name) {
+				if (elem.attr(attr_name) !== '') {
+					val[attr_name] = elem.attr(attr_name);
+				}
+			});
 		}
 		if (elem.html) {
 			val.innerHTML = elem.html();
