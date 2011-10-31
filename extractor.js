@@ -76,17 +76,23 @@ FetchPage = function(pathname, callback, timeout) {
 					}
 				});
 				res.on('close', function() {
+					if (timeout_id !== false) {
+						// Clear the timer
+						clearTimeout(timeout_id);
+						timeout_id = false;
+					}
 					if (buf.length > 0) {
-					return callback(null, buf.join(""), pathname);
+						return callback(null, buf.join(""), pathname);
 					}
 					else {
-					return callback('Stream closed, No data returned', null, pathname);
+						return callback('Stream closed, No data returned', null, pathname);
 					}
 				});
 				res.on('end', function() {
 					if (timeout_id !== false) {
 						// Clear the timer
 						clearTimeout(timeout_id);
+						timeout_id = false;
 					}
 					if (buf.length > 0) {
 						return callback(null, buf.join(""), pathname);
@@ -123,6 +129,11 @@ FetchPage = function(pathname, callback, timeout) {
 					buf.push(data);
 				});
 				res.on('close', function() {
+					if (timeout_id !== false) {
+						// Clear the timer
+						clearTimeout(timeout_id);
+						timeout_id = false;
+					}
 					if (buf.length > 0) {
 						return callback(null, buf.join(""), pathname);
 					}
@@ -131,6 +142,11 @@ FetchPage = function(pathname, callback, timeout) {
 					}
 				});
 				res.on('end', function() {
+					if (timeout_id !== false) {
+						// Clear the timer
+						clearTimeout(timeout_id);
+						timeout_id = false;
+					}
 					if (buf.length > 0) {
 						return callback(null, buf.join(""), pathname);
 					}
