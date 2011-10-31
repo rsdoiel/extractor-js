@@ -40,9 +40,15 @@ var jquery = "/*!\n * jQuery JavaScript Library v1.5\n * http://jquery.com/\n *\
  * read in and process with the callback.
  * @param callback - the callback you want to run when you have the file. The 
  * callback will be passed an error, data (buffer stream) and the path where it came from.
+ * @param timeout - (optional, default 0) a maximum time before res.end() if greater then zero
  */
-FetchPage = function(pathname, callback) {
-	var pg, parts, options = {};
+FetchPage = function(pathname, callback, timeout) {
+	var pg, parts, options = { method:'GET' };
+	// handle timeout
+	if (timeout === undefined) {
+		timeout = 0;
+	}
+
 	// Are we looking at the file system or a remote URL?
 	parts = url.parse(pathname);
 	options.host = parts.hostname;
@@ -60,85 +66,101 @@ FetchPage = function(pathname, callback) {
 		switch (parts.protocol) {
 		case 'http:':
 			if (parts.port === undefined) {
-			options.port = 80;
+				options.port = 80;
 			}
-			pg = http.get(options, function(res) {
-			var buf = [];
-			res.on('data', function(data) {
-				if (data) {
-				buf.push(data);
+			pg = http.request(options, function(res) {
+				var buf = [], timeout_id = false;
+				res.on('data', function(data) {
+					if (data) {
+						buf.push(data);
+					}
+				});
+				res.on('close', function() {
+					if (buf.length > 0) {
+					return callback(null, buf.join(""), pathname);
+					}
+					else {
+					return callback('Stream closed, No data returned', null, pathname);
+					}
+				});
+				res.on('end', function() {
+					if (timeout_id !== false) {
+						// Clear the timer
+						clearTimeout(timeout_id);
+					}
+					if (buf.length > 0) {
+						return callback(null, buf.join(""), pathname);
+					}
+					else {
+						return callback('No data returned', null, pathname);
+					}
+				});
+				res.on('error', function(err) {
+					if (buf.length > 0) {
+						return callback(err, buf.join(""), pathname);
+					}
+					else {
+						return callback(err, null, pathname);
+					}
+				});
+				// Handle a timeout
+				if (timeout > 0) {
+					timeout_id = setTimeout(function() {
+						res.end();
+					}, timeout);
 				}
-			});
-			res.on('close', function() {
-				if (buf.length > 0) {
-				return callback(null, buf.join(""), pathname);
-				}
-				else {
-				return callback('Stream closed, No data returned', null, pathname);
-				}
-			});
-			res.on('end', function() {
-				if (buf.length > 0) {
-				return callback(null, buf.join(""), pathname);
-				}
-				else {
-				return callback('No data returned', null, pathname);
-				}
-			});
-			res.on('error', function(err) {
-				if (buf.length > 0) {
-				return callback(err, buf.join(""), pathname);
-				}
-				else {
-				return callback(err, null, pathname);
-				}
-			});
 			}).on("error", function(err) {
-			return callback(err, null, pathname);
+				return callback(err, null, pathname);
 			});
 			break;
 		case 'https:':
 			if (parts.port === undefined) {
-			options.port = 443;
+				options.port = 443;
 			}
 			pg = https.get(options, function(res) {
-			var buf = [];
-			res.on('data', function(data) {
-				buf.push(data);
-			});
-			res.on('close', function() {
-				if (buf.length > 0) {
-				return callback(null, buf.join(""), pathname);
+				var buf = [], timeout_id = false;
+				res.on('data', function(data) {
+					buf.push(data);
+				});
+				res.on('close', function() {
+					if (buf.length > 0) {
+						return callback(null, buf.join(""), pathname);
+					}
+					else {
+						return callback('Stream closed, No data returned', null, pathname);
+					}
+				});
+				res.on('end', function() {
+					if (buf.length > 0) {
+						return callback(null, buf.join(""), pathname);
+					}
+					else {
+						return callback('No data returned', null, pathname);
+					}
+				});
+				res.on('error', function(err) {
+					if (buf.length > 0) {
+						return callback(err, buf.join(""), pathname);
+					}
+					else {
+						return callback(err, null, pathname);
+					}
+				});
+				// Handle a timeout
+				if (timeout > 0) {
+					timeout_id = setTimeout(function() {
+						res.end();
+					}, timeout);
 				}
-				else {
-				return callback('Stream closed, No data returned', null, pathname);
-				}
-			});
-			res.on('end', function() {
-				if (buf.length > 0) {
-				return callback(null, buf.join(""), pathname);
-				}
-				else {
-				return callback('No data returned', null, pathname);
-				}
-			});
-			res.on('error', function(err) {
-				if (buf.length > 0) {
-				return callback(err, buf.join(""), pathname);
-				}
-				else {
-				return callback(err, null, pathname);
-				}
-			});
 			}).on("error", function(err) {
 				return callback(err, null, pathname);
 			});
 			break;
 		default:
 			return callback("ERROR: unsupported protocol for " + pathname, null, pathname);
-		}
+		}		
 	}
-}; /* END: FetchPage(pathname, callback) */
+}; /* END: FetchPage(pathname, callback, timeout) */
 
 
 /**
