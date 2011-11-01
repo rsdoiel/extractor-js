@@ -100,7 +100,7 @@ TESTS.Scrape1 = function () {
 	    assert.ok(! err, "Should  not get an error. " + err);
 	    assert.equal(pname, undefined, "Should have pname set to ''");
 	    assert.ok(typeof data === 'object', "Should have a data object");
-	    console.log("DEBUG options: " + JSON.stringify(data));// DEBUG
+	    //console.log("DEBUG options: " + JSON.stringify(data));// DEBUG
 	    assert.equal(data.title.text, "Test 1", "Title should be 'Test 1': " + JSON.stringify(data));
 	    assert.equal(data.h1.innerHTML, "H1 of Test 1", "h1 should be 'H1 of Test 1': " + JSON.stringify(data));
 	    test_completed += 1;

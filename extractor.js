@@ -264,8 +264,8 @@ Scrape = function(document_or_path, selectors, callback, options) {
 								output[ky].push(makeItem(elem));
 							});
 						} else if (val.length === 1) {
-						console.log("DEBUG ky: " + ky + ' -> ' + val.length);// DEBUG
-							console.error("DEBUG val[0] -> " + sys.inspect(val[0]));// DEBUG
+							//console.log("DEBUG ky: " + ky + ' -> ' + val.length);// DEBUG
+							//console.error("DEBUG val[0] -> " + sys.inspect(val[0]));// DEBUG
 							output[ky] = makeItem(val[0]);
 						}
 
