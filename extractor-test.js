@@ -77,7 +77,7 @@ TESTS.Scrape1 = function () {
 	    map2b = { title: 'div.title > h2', article: '.article'},
 		doc3 = '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n\n<html xmlns="http://www.w3.org/1999/xhtml">\n\t<head>\n\t\t<meta name="keywords" content="Test, One Two Three" />\n\t\t<title>Test Page</title>\n\t</head>\n\t<body>\n\t\t<div id="site-info">This is the site information</div>\n\t\t<ul>\n\t\t<li><img id="i1" src="one.jpg" alt="dummy image 1" /></li>\n\t\t<li><img id="i2" src="two.jpg" alt="dummy image 2" /></li>\n\t\t<li><img id="i3" src="three.jpg" alt="dummy image 3" /></li>\n\t</ul>\n</body>\n</html>',
 		map3 = { 
-            keywords:'meta[name="keywords"]', 
+            keywords: 'meta[name="keywords"]', 
 		    title: "title",
 		    image1: "#i1",
 		    image2: "#i2",
@@ -100,7 +100,8 @@ TESTS.Scrape1 = function () {
 	    assert.ok(! err, "Should  not get an error. " + err);
 	    assert.equal(pname, undefined, "Should have pname set to ''");
 	    assert.ok(typeof data === 'object', "Should have a data object");
-	    assert.equal(data.title.innerHTML, "Test 1", "Title should be 'Test 1': " + JSON.stringify(data));
+	    console.log("DEBUG options: " + JSON.stringify(data));// DEBUG
+	    assert.equal(data.title.text, "Test 1", "Title should be 'Test 1': " + JSON.stringify(data));
 	    assert.equal(data.h1.innerHTML, "H1 of Test 1", "h1 should be 'H1 of Test 1': " + JSON.stringify(data));
 	    test_completed += 1;
 	    display("Scrape test, completed processing (" + test_completed + "/" + test_expected + ") : markup");
