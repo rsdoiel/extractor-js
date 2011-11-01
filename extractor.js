@@ -68,19 +68,14 @@ FetchPage = function(pathname, callback, timeout) {
 			if (parts.port === undefined) {
 				options.port = 80;
 			}
-			pg = http.request(options, function(res) {
-				var buf = [], timeout_id = false;
+			pg = http.get(options, function(res) {
+				var buf = [];
 				res.on('data', function(data) {
 					if (data) {
 						buf.push(data);
 					}
 				});
 				res.on('close', function() {
-					if (timeout_id !== false) {
-						// Clear the timer
-						clearTimeout(timeout_id);
-						timeout_id = false;
-					}
 					if (buf.length > 0) {
 						return callback(null, buf.join(""), pathname);
 					}
@@ -89,11 +84,6 @@ FetchPage = function(pathname, callback, timeout) {
 					}
 				});
 				res.on('end', function() {
-					if (timeout_id !== false) {
-						// Clear the timer
-						clearTimeout(timeout_id);
-						timeout_id = false;
-					}
 					if (buf.length > 0) {
 						return callback(null, buf.join(""), pathname);
 					}
@@ -109,12 +99,6 @@ FetchPage = function(pathname, callback, timeout) {
 						return callback(err, null, pathname);
 					}
 				});
-				// Handle a timeout
-				if (timeout > 0) {
-					timeout_id = setTimeout(function() {
-						res.end();
-					}, timeout);
-				}
 			}).on("error", function(err) {
 				return callback(err, null, pathname);
 			});
@@ -124,16 +108,11 @@ FetchPage = function(pathname, callback, timeout) {
 				options.port = 443;
 			}
 			pg = https.get(options, function(res) {
-				var buf = [], timeout_id = false;
+				var buf = [];
 				res.on('data', function(data) {
 					buf.push(data);
 				});
 				res.on('close', function() {
-					if (timeout_id !== false) {
-						// Clear the timer
-						clearTimeout(timeout_id);
-						timeout_id = false;
-					}
 					if (buf.length > 0) {
 						return callback(null, buf.join(""), pathname);
 					}
@@ -142,11 +121,6 @@ FetchPage = function(pathname, callback, timeout) {
 					}
 				});
 				res.on('end', function() {
-					if (timeout_id !== false) {
-						// Clear the timer
-						clearTimeout(timeout_id);
-						timeout_id = false;
-					}
 					if (buf.length > 0) {
 						return callback(null, buf.join(""), pathname);
 					}
@@ -162,12 +136,6 @@ FetchPage = function(pathname, callback, timeout) {
 						return callback(err, null, pathname);
 					}
 				});
-				// Handle a timeout
-				if (timeout > 0) {
-					timeout_id = setTimeout(function() {
-						res.end();
-					}, timeout);
-				}
 			}).on("error", function(err) {
 				return callback(err, null, pathname);
 			});
