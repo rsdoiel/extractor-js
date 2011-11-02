@@ -13,7 +13,7 @@
  * 
  * revision 0.0.5
  */
-var	url = require('url'), sys = require('sys'),
+var	url = require('url'),
 	fs = require('fs'),
 	path = require('path'),
 	http = require('http'),

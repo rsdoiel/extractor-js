@@ -13,8 +13,7 @@
 
 var TIMEOUT = 10;
 
-var sys = require('sys'),
-    assert = require('assert'),
+var assert = require('assert'),
     extractor = require('./extractor'),
     test_expected = 0,
     test_completed = 0,
