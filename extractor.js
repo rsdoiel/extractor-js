@@ -13,7 +13,7 @@
  * 
  * revision 0.0.5
  */
-var	url = require('url'),
+var	url = require('url'), sys = require('sys'),
 	fs = require('fs'),
 	path = require('path'),
 	http = require('http'),
@@ -55,19 +55,14 @@ FetchPage = function(pathname, callback, timeout) {
 			if (parts.port === undefined) {
 				options.port = 80;
 			}
-			pg = http.request(options, function(res) {
-				var buf = [], timeout_id = false;
+			pg = http.get(options, function(res) {
+				var buf = [];
 				res.on('data', function(data) {
 					if (data) {
 						buf.push(data);
 					}
 				});
 				res.on('close', function() {
-					if (timeout_id !== false) {
-						// Clear the timer
-						clearTimeout(timeout_id);
-						timeout_id = false;
-					}
 					if (buf.length > 0) {
 						return callback(null, buf.join(""), pathname);
 					}
@@ -76,11 +71,6 @@ FetchPage = function(pathname, callback, timeout) {
 					}
 				});
 				res.on('end', function() {
-					if (timeout_id !== false) {
-						// Clear the timer
-						clearTimeout(timeout_id);
-						timeout_id = false;
-					}
 					if (buf.length > 0) {
 						return callback(null, buf.join(""), pathname);
 					}
@@ -96,12 +86,6 @@ FetchPage = function(pathname, callback, timeout) {
 						return callback(err, null, pathname);
 					}
 				});
-				// Handle a timeout
-				if (timeout > 0) {
-					timeout_id = setTimeout(function() {
-						res.end();
-					}, timeout);
-				}
 			}).on("error", function(err) {
 				return callback(err, null, pathname);
 			});
@@ -111,16 +95,11 @@ FetchPage = function(pathname, callback, timeout) {
 				options.port = 443;
 			}
 			pg = https.get(options, function(res) {
-				var buf = [], timeout_id = false;
+				var buf = [];
 				res.on('data', function(data) {
 					buf.push(data);
 				});
 				res.on('close', function() {
-					if (timeout_id !== false) {
-						// Clear the timer
-						clearTimeout(timeout_id);
-						timeout_id = false;
-					}
 					if (buf.length > 0) {
 						return callback(null, buf.join(""), pathname);
 					}
@@ -129,11 +108,6 @@ FetchPage = function(pathname, callback, timeout) {
 					}
 				});
 				res.on('end', function() {
-					if (timeout_id !== false) {
-						// Clear the timer
-						clearTimeout(timeout_id);
-						timeout_id = false;
-					}
 					if (buf.length > 0) {
 						return callback(null, buf.join(""), pathname);
 					}
@@ -149,12 +123,6 @@ FetchPage = function(pathname, callback, timeout) {
 						return callback(err, null, pathname);
 					}
 				});
-				// Handle a timeout
-				if (timeout > 0) {
-					timeout_id = setTimeout(function() {
-						res.end();
-					}, timeout);
-				}
 			}).on("error", function(err) {
 				return callback(err, null, pathname);
 			});
@@ -177,15 +145,24 @@ FetchPage = function(pathname, callback, timeout) {
  * (e.g. selectors = { title: 'title', body = '.main_content'}
  * would yeild an object with title and body properties based on the CSS
  * selectors passed)
- * @param cleaner (optional) - a function to cleanup the document BEFORE
- * processing with querySelectorAll. The cleaner is passed a string and returns a 
- * cleaned up string.
- * @param transformer (optional) - a function to transform the scraped
- * content (e.g. remove uninteresting markup. Transformer is called with 
- * the maps' key and the value returned by querySelectorAll. It is expected to return
- * a transformed value as a string.
+ * @param options - can include 
+ * 		+ cleaner - a function to cleanup the document BEFORE
+ *		  processing with querySelectorAll. The cleaner is passed a string and returns a 
+ * 		  cleaned up string.
+ * 		+ transformer - a function to transform the scraped
+ * 		  content (e.g. remove uninteresting markup. Transformer is called with 
+ * 		  the maps' key and the value returned by querySelectorAll. It is expected to return
+ * 		  a transformed value as a string.
+ * 		+ features object -
+ *		"features": {
+ *			"FetchExternalResources": false,
+ *			"ProcessExternalResources": false,
+ *			"MutationEvents": false,
+ *			"QuerySelector": ["2.0"]
+ *		},
+ *		+ src - JavaScript source to apply to page
  */
-Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
+Scrape = function(document_or_path, selectors, callback, options) {
 	if (typeof callback !== 'function') {
 		throw ("callback is not a function");
 	}
@@ -209,7 +186,23 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 	};
 
 	//temporary workaround, while function has not an "option" object parameter merged with defaults
-	var options = defaults;
+	if (options === undefined) {
+		options = defaults;
+	} else {
+		// probably a cleaner way to do this.
+		if (options.cleaner === undefined) {
+			options.cleaner = defaults.cleaner;
+		}
+		if (options.transformer === undefined) {
+			options.transformer = defaults.transformer;
+		}
+		if (options.features === undefined) {
+			options.features = defaults.features;
+		}
+		if (options.src === undefined) {
+			options.src = defaults.src;
+		}
+	}
 
 	/**
 	 * Builds a simple object containing useful element attributes
@@ -235,15 +228,19 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 			val.innerHTML = elem.html();
 		}
 		if (elem.text) {
-			val.text = elem.text();
+			if (typeof elem.text === 'string') {
+				val.text = elem.text;
+			} else {
+				val.text = elem.text();
+			}
 		}
 
 		return val;
 	};// END: makeItem(elem)
     
 	var ScrapeIt = function(src, pname) {
-		if (cleaner !== undefined) {
-			src = cleaner(src);
+		if (typeof options.cleaner === 'function') {
+			src = options.cleaner(src);
 		}
 		try {
 			jsdom.env({
@@ -267,11 +264,13 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 								output[ky].push(makeItem(elem));
 							});
 						} else if (val.length === 1) {
+							//console.log("DEBUG ky: " + ky + ' -> ' + val.length);// DEBUG
+							//console.error("DEBUG val[0] -> " + sys.inspect(val[0]));// DEBUG
 							output[ky] = makeItem(val[0]);
 						}
 
-						if (transformer !== undefined) {
-							output[ky] = transform(ky, output[ky]);
+						if (typeof options.transformer === 'function') {
+							output[ky] = options.transformer(ky, output[ky]);
 						}
 					}
 					return callback(null, output, pname);
@@ -295,19 +294,19 @@ Scrape = function(document_or_path, selectors, callback, cleaner, transformer) {
 			}
 		});
 	}
-}; /* END: Scrape(document_or_path, selectors, callback, cleaner, transformer) */
+}; /* END: Scrape(document_or_path, selectors, callback, options) */
 
 
 /**
  * Spider - extract anchors, images, links, and script urls from a page.
  * @param document_or_path
  * @param callback - callback for when you have all your scraped content
- * @param cleaner - optional function to cleanup source before Scraping
+ * @param options - optional functions,settings to cleanup source before Scraping
  * @return object with assets property and links property
  */
-Spider = function (document_or_path, callback, cleaner) {
+Spider = function (document_or_path, callback, options) {
 	var map = {anchors: 'a', images: 'img', scripts: 'script', links:'link' };
-	Scrape(document_or_path, map, callback, cleaner);
+	Scrape(document_or_path, map, callback, options);
 }; // END: Spider(document_or_path);
 
 exports.FetchPage = FetchPage;
