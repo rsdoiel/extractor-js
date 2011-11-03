@@ -13,7 +13,7 @@
  * 
  * revision 0.0.5
  */
-var	url = require('url'), sys = require('sys'),
+var	url = require('url'),
 	fs = require('fs'),
 	path = require('path'),
 	http = require('http'),
@@ -224,8 +224,9 @@ Scrape = function(document_or_path, selectors, callback, options) {
 				}
 			});
 		}
-		if (elem.html) {
-			val.innerHTML = elem.html();
+
+		if (elem.innerHTML) {
+			val.innerHTML = elem.innerHTML;
 		}
 		if (elem.text) {
 			if (typeof elem.text === 'string') {
@@ -264,8 +265,6 @@ Scrape = function(document_or_path, selectors, callback, options) {
 								output[ky].push(makeItem(elem));
 							});
 						} else if (val.length === 1) {
-							//console.log("DEBUG ky: " + ky + ' -> ' + val.length);// DEBUG
-							//console.error("DEBUG val[0] -> " + sys.inspect(val[0]));// DEBUG
 							output[ky] = makeItem(val[0]);
 						}
 

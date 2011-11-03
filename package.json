@@ -17,16 +17,16 @@
 		"url" : "https://github.com/rsdoiel"
 	}],
 	"engines" : {
-		"node" : "0.4 || 0.5",
-		"npm" : "1"
+		"node" : ">= 0.4",
+		"npm" : ">= 1"
 	},
 	"dependencies" : {
-		"jsdom" : ">= 0.2.1"
+		"jsdom" : ">= 0.2.9"
 	},
 	"scripts" : {
 		"test" : "node extractor-test.js"
 	},
 	"bugs": {
 		"url": "http://github.com/rsdoiel/extractor-js/issues"
-    	}
+   	}
 }
