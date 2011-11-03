@@ -272,6 +272,9 @@ Scrape = function(document_or_path, selectors, callback, options) {
 							output[ky] = options.transformer(ky, output[ky]);
 						}
 					}
+
+					window.close();
+					
 					return callback(null, output, pname);
 				}
 			});
