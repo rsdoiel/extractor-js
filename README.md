@@ -40,10 +40,13 @@ pages.forEach(function(page) {
         console.log("Processed " + page_name);
         console.log("Page record: " + JSON.stringify(data));
     });
-});```
+});
+```
+
 
 This example script would process three pages from the pages array and output a console log of the processed page 
 and a JSON representation of the content described by the selectors.
+
 
 # Example (Spider)
 
@@ -62,4 +65,5 @@ extractor.Spider('http://nodejs.org', function(err, data, url) {
     for(i = 0; i < data.links.length; i += 1) {
         console.log("Link " + i + ": " + data.links[i].href);
     }
-});```
+});
+```
