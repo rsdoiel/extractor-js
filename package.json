@@ -17,7 +17,7 @@
 		"url" : "https://github.com/rsdoiel"
 	}],
 	"engines" : {
-		"node" : ">= 0.4",
+		"node" : ">= 0.6",
 		"npm" : ">= 1"
 	},
 	"dependencies" : {
