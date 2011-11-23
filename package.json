@@ -1,6 +1,6 @@
 {
 	"name" : "extractor",
-	"version" : "0.0.5",
+	"version" : "0.0.6",
 	"description" : "A small utility library for fetching and scraping web content. It targets scraping content with a unique attribute id, class or tag.",
 	"main" : "./extractor.js",
 	"repository" : {
@@ -24,7 +24,7 @@
 		"jsdom" : ">= 0.2.9"
 	},
 	"scripts" : {
-		"test" : "node extractor-test.js"
+		"test" : "node extractor_test.js"
 	},
 	"bugs": {
 		"url": "http://github.com/rsdoiel/extractor-js/issues"
