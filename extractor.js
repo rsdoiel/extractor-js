@@ -29,7 +29,7 @@ var	url = require('url'),
  * callback will be passed an error, data (buffer stream) and the path where it came from.
  * @param timeout - (optional, default 0) a maximum time before res.end() if greater then zero
  */
-FetchPage = function(pathname, callback, timeout) {
+var FetchPage = function(pathname, callback, timeout) {
 	var pg, parts, options = { method:'GET' };
 	// handle timeout
 	if (timeout === undefined) {
@@ -146,14 +146,14 @@ FetchPage = function(pathname, callback, timeout) {
  * would yeild an object with title and body properties based on the CSS
  * selectors passed)
  * @param options - can include 
- * 		+ cleaner - a function to cleanup the document BEFORE
+ *      + cleaner - a function to cleanup the document BEFORE
  *		  processing with querySelectorAll. The cleaner is passed a string and returns a 
- * 		  cleaned up string.
- * 		+ transformer - a function to transform the scraped
- * 		  content (e.g. remove uninteresting markup. Transformer is called with 
- * 		  the maps' key and the value returned by querySelectorAll. It is expected to return
- * 		  a transformed value as a string.
- * 		+ features object -
+ *        cleaned up string.
+ *      + transformer - a function to transform the scraped
+ *        content (e.g. remove uninteresting markup. Transformer is called with 
+ *        the maps' key and the value returned by querySelectorAll. It is expected to return
+ *        a transformed value as a string.
+ *      + features object -
  *		"features": {
  *			"FetchExternalResources": false,
  *			"ProcessExternalResources": false,
@@ -162,7 +162,7 @@ FetchPage = function(pathname, callback, timeout) {
  *		},
  *		+ src - JavaScript source to apply to page
  */
-Scrape = function(document_or_path, selectors, callback, options) {
+var Scrape = function(document_or_path, selectors, callback, options) {
 	if (typeof callback !== 'function') {
 		throw ("callback is not a function");
 	}
@@ -255,15 +255,15 @@ Scrape = function(document_or_path, selectors, callback, options) {
 					
 					var ky = "",
 						output = {},
-						val;
-					for (ky in selectors) {
+						val, pushItem = function (elem) {
+                            output[ky].push(makeItem(elem));
+                        };
+                    Object.keys(selectors).forEach(function (ky) {
 						val = window.document.querySelectorAll(selectors[ky]);
 
 						if (val.length > 1) {
 							output[ky] = [];
-							Array.prototype.forEach.call(val, function(elem){
-								output[ky].push(makeItem(elem));
-							});
+							Array.prototype.forEach.call(val, pushItem);
 						} else if (val.length === 1) {
 							output[ky] = makeItem(val[0]);
 						}
@@ -271,7 +271,7 @@ Scrape = function(document_or_path, selectors, callback, options) {
 						if (typeof options.transformer === 'function') {
 							output[ky] = options.transformer(ky, output[ky]);
 						}
-					}
+					});
 
 					window.close();
 					
@@ -306,7 +306,7 @@ Scrape = function(document_or_path, selectors, callback, options) {
  * @param options - optional functions,settings to cleanup source before Scraping
  * @return object with assets property and links property
  */
-Spider = function (document_or_path, callback, options) {
+var Spider = function (document_or_path, callback, options) {
 	var map = {anchors: 'a', images: 'img', scripts: 'script', links:'link' };
 	Scrape(document_or_path, map, callback, options);
 }; // END: Spider(document_or_path);

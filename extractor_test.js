@@ -21,7 +21,7 @@ var assert = require('assert'),
 
 console.log("Starting [extractor-test.js] ... " + new Date());
 
-display = function(msg) {
+var display = function(msg) {
 	if (msg === undefined) {
         msg = output.shift();
 		while(msg) {

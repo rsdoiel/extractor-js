@@ -5,8 +5,7 @@ revision 0.0.5
 
 # Overview
 
-Periodically I wind up scripting some screen scraping or spidering sites to check links.  Node is really nice for this.
-extractor-js is a couple of utility methods I've found I reuse allot in these types of script.
+Periodically I wind up writing scripts to screen scrape or spider sites.  Node  is really nice for this. extractor-js is a utility module for these types of script.
 
 ## Three methods
 
@@ -44,8 +43,7 @@ pages.forEach(function(page) {
 ```
 
 
-This example script would process three pages from the pages array and output a console log of the processed page 
-and a JSON representation of the content described by the selectors.
+This example script would process three pages from the pages array and output a console log of the processed page and a JSON representation of the content described by the selectors.
 
 
 # Example (Spider)
@@ -67,3 +65,4 @@ extractor.Spider('http://nodejs.org', function(err, data, url) {
     }
 });
 ```
+
