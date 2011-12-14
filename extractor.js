@@ -11,7 +11,7 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.6
+ * revision 0.0.6b
  */
 var	url = require('url'),
 	util = require('util'),
