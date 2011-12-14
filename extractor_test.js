@@ -8,12 +8,12 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.6b
+ * revision 0.0.7
  */
 
-var TIMEOUT = 10;
-
-var util = require('util'),
+var TIMEOUT = 10,
+    util = require('util'),
+    path = require('path'),
     assert = require('assert'),
     extractor = require('./extractor'),
     test_expected = 0,
@@ -31,8 +31,7 @@ var util = require('util'),
 	}
     };
 
-console.log("Starting [extractor-test.js] ... " + new Date());
-
+console.log("Starting [" + path.basename(process.argv[1]) + "] ... " + new Date());
 
 // Test FetchPage()
 TESTS.FetchPage = function() {
@@ -152,6 +151,24 @@ TESTS.Spider = function () {
 		test_completed += 1;
 		display("Spider http://nodejs.org completed processing (" + test_completed + "/" + test_expected + ")");
 	});
+};
+
+TESTS.SubmitForm = function () {
+	var form_options = { method:'GET' }, form_data = { s:'npm', searchsubmit:'Search' };
+	test_expected += 1;
+	extractor.SubmitForm("http://blog.nodejs.org/", form_data, function (err, data, options) {
+		assert.ok(! err, "Should not have an error from search request " + err);
+		assert.ok(data, "Should get some data back.");
+		assert.ok(data.match(/<\/html>/), "Should get the end of the html page response.");
+		assert.equal(options.protocol, 'http:', "Should have an http: for protocol.");
+		assert.equal(options.host, 'blog.nodejs.org', "Should have host blog.nodejs.org.");
+		assert.equal(options.port, 80, "Should have port 80");
+		assert.equal(options.path, '/', "Should have path /");
+		assert.equal(options.method, 'GET', "Should have path GET");
+		assert.equal(options.timeout, 30000, "Should have 60000 for timeout.");		
+		test_completed += 1;
+		display("SubmitForm http://blog.nodejs.org/ completed processing (" + test_completed + "/" + test_expected + ")");
+	}, form_options);
 };
 
 // Run the tests and keep track of what passed

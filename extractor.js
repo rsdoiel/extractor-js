@@ -11,16 +11,100 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.6b
+ * revision 0.0.7
  */
 var	url = require('url'),
-	util = require('util'),
 	fs = require('fs'),
 	path = require('path'),
 	http = require('http'),
 	https = require('https'),
+	querystring = require('querystring'),
 	jsdom = require('jsdom');
 
+/**
+ * SubmitForm - send a get/post and pass the results to the callback.
+ * @param action - the url hosting the form processor (e.g. 'http://example.com/form-processor.php')
+ * @param form_data - the form field name/values to submit
+ * @param callback - the callback to use when you get a response from the form submission. Args past
+ * to the callback function are err, data and options.
+ * @param options - a set of properties to modify SubmitForm behavior (e.g. options.method defaults to POST,
+ * optional.timeout defaults to 30000 milliseconds).
+ */
+var SubmitForm = function (action, form_data, callback, options) {
+	var defaults = { method:'POST', timeout:30000, protocol: "http:", port:80 }, 
+		parts = url.parse(action), req, timer_id, protocol_method = http;
+
+	// Setup options
+	if (options === undefined) {
+		options = {};
+	}
+	Object.keys(defaults).forEach(function (ky) {
+		if (options[ky] === undefined) {
+			options[ky] = defaults[ky];
+		}
+	});
+	Object.keys(parts).forEach(function (ky) {
+		options[ky] = parts[ky];
+	});
+	if (options.port === undefined) {
+		options.port = 80;
+	}
+
+	// Process form request
+	if (options.protocol === 'http:') {
+		protocol_method = http;
+	} else if (options.protocol === 'https:') {
+		protocol_method = https;
+	} else {
+		return callback("ERROR: protocol not supported", null, options);
+	}
+
+	req = protocol_method.request(options, function(res) {
+		var buf = [];
+		res.on('data', function(data) {
+			if (data) {
+				buf.push(data);
+			}
+		});
+		res.on('close', function() {
+			if (timer_id) { clearTimeout(timer_id); }
+			if (buf.length > 0) {
+				return callback(null, buf.join(""), options);
+			}
+			else {
+				return callback('Stream closed, No data returned', null, options);
+			}
+		});
+		res.on('end', function() {
+			if (timer_id) { clearTimeout(timer_id); }
+			if (buf.length > 0) {
+				return callback(null, buf.join(""), options);
+			}
+			else {
+				return callback('No data returned', null, options);
+			}
+		});
+		res.on('error', function(err) {
+			if (timer_id) { clearTimeout(timer_id); }
+			if (buf.length > 0) {
+				return callback(err, buf.join(""), options);
+			}
+			else {
+				return callback(err, null, options);
+			}
+		});
+	});
+	req.on('error', function (err) {
+		return callback(err, null, options);
+	});
+	// Send the data
+	req.write(querystring.encode(form_data));
+	req.end();
+		
+	timer_id = setTimeout(function () {
+		return callback("ERROR: timeout", null, options);
+	}, options.timeout);
+}; /* END SubmitForm(action, form_data, callback, options) */
 
 /**
  * FetchPage - read a file from the local disc or via http/https
@@ -28,111 +112,99 @@ var	url = require('url'),
  * read in and process with the callback.
  * @param callback - the callback you want to run when you have the file. The 
  * callback will be passed an error, data (buffer stream) and the path where it came from.
- * @param timeout - (optional, default 0) a maximum time before res.end() if greater then zero
+ * @param options - a set of properties to modify FetchPage behavior (e.g. optional.timeout  
+ * defaults to 30000 milliseconds).
  */
-var FetchPage = function(pathname, callback, timeout) {
-	var pg, parts, options = { method:'GET' };
+var FetchPage = function(pathname, callback, options) {
+	var pg, parts, timer_id, protocol_method = http;
 	// handle timeout
-	if (timeout === undefined) {
-		timeout = 0;
+	if (options === undefined) {
+		options = {};
+	}
+	if (options.timeout === undefined) {
+		options.timeout = 30000;
 	}
 
 	// Are we looking at the file system or a remote URL?
 	parts = url.parse(pathname);
-	options.host = parts.hostname;
-	if (parts.pathname === undefined) {
+	Object.keys(parts).forEach(function(ky) {
+		options[ky] = parts[ky];
+	});
+	options.host = options.hostname;
+	if (options.pathname === undefined) {
 		options.path = '/';
 	} else {
-		options.path = parts.pathname;
+		options.path = options.pathname;
 	}
 	// Process based on our expectations of where to read from.
-	if (parts.protocol === undefined || parts.prototcol === 'file:') {
-		fs.readFile(path.normalize(parts.pathname), function(err, data) {
+	if (options.protocol === undefined || options.prototcol === 'file:') {
+		fs.readFile(path.normalize(options.pathname), function(err, data) {
 			return callback(err, data, pathname);
 		});
 	} else {
-		switch (parts.protocol) {
+		switch (options.protocol) {
 		case 'http:':
-			if (parts.port === undefined) {
+			protocol_method = http;
+			
+			if (options.port === undefined) {
 				options.port = 80;
 			}
-			pg = http.get(options, function(res) {
-				var buf = [];
-				res.on('data', function(data) {
-					if (data) {
-						buf.push(data);
-					}
-				});
-				res.on('close', function() {
-					if (buf.length > 0) {
-						return callback(null, buf.join(""), pathname);
-					}
-					else {
-						return callback('Stream closed, No data returned', null, pathname);
-					}
-				});
-				res.on('end', function() {
-					if (buf.length > 0) {
-						return callback(null, buf.join(""), pathname);
-					}
-					else {
-						return callback('No data returned', null, pathname);
-					}
-				});
-				res.on('error', function(err) {
-					if (buf.length > 0) {
-						return callback(err, buf.join(""), pathname);
-					}
-					else {
-						return callback(err, null, pathname);
-					}
-				});
-			}).on("error", function(err) {
-				return callback(err, null, pathname);
-			});
+			options.method = 'GET';
 			break;
 		case 'https:':
-			if (parts.port === undefined) {
+			if (options.port === undefined) {
 				options.port = 443;
 			}
-			pg = https.get(options, function(res) {
-				var buf = [];
-				res.on('data', function(data) {
-					buf.push(data);
-				});
-				res.on('close', function() {
-					if (buf.length > 0) {
-						return callback(null, buf.join(""), pathname);
-					}
-					else {
-						return callback('Stream closed, No data returned', null, pathname);
-					}
-				});
-				res.on('end', function() {
-					if (buf.length > 0) {
-						return callback(null, buf.join(""), pathname);
-					}
-					else {
-						return callback('No data returned', null, pathname);
-					}
-				});
-				res.on('error', function(err) {
-					if (buf.length > 0) {
-						return callback(err, buf.join(""), pathname);
-					}
-					else {
-						return callback(err, null, pathname);
-					}
-				});
-			}).on("error", function(err) {
-				return callback(err, null, pathname);
-			});
+			options.method = 'GET';
 			break;
 		default:
 			return callback("ERROR: unsupported protocol for " + pathname, null, pathname);
 		}		
+
+		pg = protocol_method.get(options, function(res) {
+			var buf = [];
+			res.on('data', function(data) {
+				if (data) {
+					buf.push(data);
+				}
+			});
+			res.on('close', function() {
+				if (timer_id) { clearTimeout(timer_id); }
+				if (buf.length > 0) {
+					return callback(null, buf.join(""), pathname);
+				}
+				else {
+					return callback('Stream closed, No data returned', null, pathname);
+				}
+			});
+			res.on('end', function() {
+				if (timer_id) { clearTimeout(timer_id); }
+				if (buf.length > 0) {
+					return callback(null, buf.join(""), pathname);
+				}
+				else {
+					return callback('No data returned', null, pathname);
+				}
+			});
+			res.on('error', function(err) {
+				if (timer_id) { clearTimeout(timer_id); }
+				if (buf.length > 0) {
+					return callback(err, buf.join(""), pathname);
+				}
+				else {
+					return callback(err, null, pathname);
+				}
+			});
+		}).on("error", function(err) {
+			if (timer_id) { clearTimeout(timer_id); }
+			return callback(err, null, pathname);
+		});
+
+		timer_id = setTimeout(function () {
+			return callback("ERROR: timeout " + pathname, null, pathname);
+		}, options.timeout);
 	}
-}; /* END: FetchPage(pathname, callback, timeout) */
+}; /* END: FetchPage(pathname, callback, options) */
 
 
 /**
@@ -191,18 +263,11 @@ var Scrape = function(document_or_path, selectors, callback, options) {
 		options = defaults;
 	} else {
 		// probably a cleaner way to do this.
-		if (options.cleaner === undefined) {
-			options.cleaner = defaults.cleaner;
-		}
-		if (options.transformer === undefined) {
-			options.transformer = defaults.transformer;
-		}
-		if (options.features === undefined) {
-			options.features = defaults.features;
-		}
-		if (options.src === undefined) {
-			options.src = defaults.src;
-		}
+		Object.keys(defaults).forEach(function(ky) {
+			if (options[ky] === undefined) {
+				options[ky] = defaults[ky];
+			}
+		});
 	}
 
 	/**
@@ -272,7 +337,6 @@ var Scrape = function(document_or_path, selectors, callback, options) {
 					});
 
 					window.close();
-					
 					return callback(null, output, pname);
 				}
 			});
@@ -305,10 +369,11 @@ var Scrape = function(document_or_path, selectors, callback, options) {
  * @return object with assets property and links property
  */
 var Spider = function (document_or_path, callback, options) {
-	var map = {anchors: 'a', images: 'img', scripts: 'script', links:'link' };
+	var map = { anchors: 'a', images: 'img', scripts: 'script', links:'link' };
 	Scrape(document_or_path, map, callback, options);
 }; // END: Spider(document_or_path);
 
+exports.SubmitForm = SubmitForm;
 exports.FetchPage = FetchPage;
 exports.Scrape = Scrape;
 exports.Spider = Spider;
