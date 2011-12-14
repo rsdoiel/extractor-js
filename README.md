@@ -1,6 +1,6 @@
 extractor-js
 ============
-revision 0.0.6c
+revision 0.0.7b
 ---------------
 
 # Overview
@@ -17,6 +17,7 @@ extractor has three methods -
 the same structure as the selector object and passing it to Scrape()'s callback method. You can override the Cleaner()
 and Transformer() methods by passing in your own cleaner and transformer functions.
 * `Spider` - a utility implementation of Scrape using a fixed map for anchors, links, scripts and image tags.
+* `SubmitForm` - a way to send form data and get a response. Supported forms use either GET or POST methods.
 
 # Example (Scrape)
 

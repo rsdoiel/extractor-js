@@ -11,7 +11,7 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.7
+ * revision 0.0.7b
  */
 var	url = require('url'),
 	fs = require('fs'),
@@ -46,15 +46,18 @@ var SubmitForm = function (action, form_data, callback, options) {
 	Object.keys(parts).forEach(function (ky) {
 		options[ky] = parts[ky];
 	});
-	if (options.port === undefined) {
-		options.port = 80;
-	}
 
 	// Process form request
 	if (options.protocol === 'http:') {
 		protocol_method = http;
+		if (options.port === undefined) {
+			options.port = 80;
+		}
 	} else if (options.protocol === 'https:') {
 		protocol_method = https;
+		if (options.port === undefined) {
+			options.port = 443;
+		}
 	} else {
 		return callback("ERROR: protocol not supported", null, options);
 	}
