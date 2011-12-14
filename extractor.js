@@ -14,6 +14,7 @@
  * revision 0.0.6
  */
 var	url = require('url'),
+	util = require('util'),
 	fs = require('fs'),
 	path = require('path'),
 	http = require('http'),
@@ -249,21 +250,18 @@ var Scrape = function(document_or_path, selectors, callback, options) {
 				src : options.src,
 				features: options.features,
 				done : function(err, window) {
+					var ky = "", output = {}, val;
 					if (err) {
 						return callback(err, null, pname);
 					}
-					
-					var ky = "",
-						output = {},
-						val, pushItem = function (elem) {
-                            output[ky].push(makeItem(elem));
-                        };
-                    Object.keys(selectors).forEach(function (ky) {
+					Object.keys(selectors).forEach(function (ky) {
 						val = window.document.querySelectorAll(selectors[ky]);
 
 						if (val.length > 1) {
 							output[ky] = [];
-							Array.prototype.forEach.call(val, pushItem);
+							Array.prototype.forEach.call(val, function (elem) {
+								output[ky].push(makeItem(elem));
+                        				});
 						} else if (val.length === 1) {
 							output[ky] = makeItem(val[0]);
 						}
