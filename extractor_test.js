@@ -8,27 +8,28 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.7b
+ * revision 0.0.7c
  */
 
 var TIMEOUT = 10,
     util = require('util'),
     path = require('path'),
+    querystring = require('querystring'),
     assert = require('assert'),
     extractor = require('./extractor'),
     test_expected = 0,
     test_completed = 0,
     TESTS = {}, ky = '', output = [],
     display = function(msg) {
-	if (msg === undefined) {
-		msg = output.shift();
-		while(msg) {
-			console.log(msg);
+		if (msg === undefined) {
 			msg = output.shift();
+			while(msg) {
+				console.log(msg);
+				msg = output.shift();
+			}
+		} else {
+			output.push(msg);
 		}
-	} else {
-		output.push(msg);
-	}
     };
 
 console.log("Starting [" + path.basename(process.argv[1]) + "] ... " + new Date());
@@ -46,7 +47,7 @@ TESTS.FetchPage = function() {
 };
 
 // Test Scrape()
-TESTS.Scrape1 = function () {
+TESTS.Scrape = function () {
 	var doc = [
 		    "<!DOCTYPE html>",
 		    "<html>",
@@ -142,6 +143,7 @@ TESTS.Scrape1 = function () {
 	});
 };
 
+// Tests of Spider()
 TESTS.Spider = function () {
 	test_expected += 1;
 	extractor.Spider("http://nodejs.org", function (err, data, pname) {
@@ -153,41 +155,63 @@ TESTS.Spider = function () {
 	});
 };
 
-TESTS.SubmitForm1 = function () {
-	var form_options = { method:'GET' }, form_data = { s:'npm', searchsubmit:'Search' };
+// Tests of SubmitForm()
+TESTS.SubmitForm = function () {
+	// http GET
 	test_expected += 1;
-	extractor.SubmitForm("http://blog.nodejs.org/", form_data, function (err, data, options) {
-		assert.ok(! err, "Should not have an error from search request " + err);
-		assert.ok(data, "Should get some data back.");
-		assert.ok(data.match(/<\/html>/), "Should get the end of the html page response.");
-		assert.equal(options.protocol, 'http:', "Should have an http: for protocol.");
-		assert.equal(options.host, 'blog.nodejs.org', "Should have host blog.nodejs.org.");
-		assert.equal(options.port, 80, "Should have port 80");
-		assert.equal(options.path, '/', "Should have path /");
-		assert.equal(options.method, 'GET', "Should have path GET");
-		assert.equal(options.timeout, 30000, "Should have 30000 for timeout.");		
-		test_completed += 1;
-		display("SubmitForm http://blog.nodejs.org/ completed processing (" + test_completed + "/" + test_expected + ")");
-	}, form_options);
-};
+	(function () {
+		var hostname, pathname, uri, form_data, form_options = { method:'GET' };
 
-TESTS.SubmitForm2 = function () {
-	var form_options = { method:'GET' }, form_data = { q:'extractor-js' };
+		form_data = { s:'npm', searchsubmit:'Search' };
+		hostname = 'blog.nodejs.org';
+		pathname = '';
+		uri = ['http:/', hostname, pathname].join('/');
+		display("Running SubmitForm test " + uri);
+		extractor.SubmitForm(uri, form_data, function (err, data, options) {
+			assert.ok(! err, uri + ": " + err);
+			assert.ok(data, hostname + " should get some data back.");
+			assert.ok(data.match(/<\/html>/), hostname + " should get the end of the html page response.");
+			assert.equal(options.protocol, 'http:', hostname + " should have an http: for protocol.");
+			assert.equal(options.host, hostname, hostname + "should have host blog.nodejs.org.");
+			assert.equal(options.port, 80, hostname + " should have port 80");
+			assert.equal(options.path, ('/' + pathname + '?' + querystring.encode(form_data)), uri + " should have path " + pathname + ": " + options.path);
+			assert.equal(options.method, 'GET', hostname + " should have path GET");
+			assert.equal(options.timeout, 30000, hostname + " should have 30000 for timeout.");		
+			test_completed += 1;
+			display("SubmitForm " + uri + " completed processing (" + test_completed + "/" + test_expected + ")");
+		}, form_options);
+	}());
+
+	// https GET
 	test_expected += 1;
-	display("Running SubmitForm2 test.");
-	extractor.SubmitForm("https://github.com/search", form_data, function (err, data, options) {
-		assert.ok(! err, "Should not have an error from search request " + err);
-		assert.ok(data, "Should get some data back.");
-		assert.ok(data.match(/<\/html>/), "Should get the end of the html page response.");
-		assert.equal(options.protocol, 'https:', "Should have an http: for protocol.");
-		assert.equal(options.host, 'github.com', "Should have host github.com");
-		assert.equal(options.port, 443, "Should have port 443");
-		assert.equal(options.path, '/search', "Should have path /");
-		assert.equal(options.method, 'GET', "Should have path GET");
-		assert.equal(options.timeout, 30000, "Should have 30000 for timeout.");		
-		test_completed += 1;
-		display("SubmitForm https://github.com/search completed processing (" + test_completed + "/" + test_expected + ")");
-	}, form_options);
+	(function () {
+		var hostname, pathname, uri, form_data, form_options = { method:'GET' };
+
+		form_options = { method:'GET' };
+		form_data = { q: 'extractor-js' };
+		hostname = 'github.com';
+		pathname = 'search';
+		uri = ['https:/', hostname, pathname].join('/');
+		display("Running SubmitForm test " + uri);
+		extractor.SubmitForm(uri, form_data, function (err, data, options) {
+			assert.ok(! err, uri + ": " + err);
+			assert.ok(data, hostname + " should get some data back.");
+			assert.ok(data.match(/<\/html>/), hostname + " should get the end of the html page response.");
+			assert.equal(options.protocol, 'https:', hostname + " should have an http: for protocol.");
+			assert.equal(options.host, hostname, hostname + " should have host github.com");
+			assert.equal(options.port, 443, hostname + " should have port 443");
+			assert.equal(options.path, ('/' + pathname + '?' + querystring.encode(form_data)), hostname + " should have path " + pathname + ": " + options.path);
+			assert.equal(options.method, 'GET', hostname + " should have path GET");
+			assert.equal(options.timeout, 30000, hostname + " should have 30000 for timeout.");		
+			test_completed += 1;
+			display("SubmitForm " + uri + " completed processing (" + test_completed + "/" + test_expected + ")");
+		}, form_options);
+	}());
+
+	
+	// http POST
+	// https POST	
+	// FIXME: Need to come up with public sites I can test against
 };
 
 // Run the tests and keep track of what passed

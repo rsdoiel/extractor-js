@@ -11,7 +11,7 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.7b
+ * revision 0.0.7c
  */
 var	url = require('url'),
 	fs = require('fs'),
@@ -20,6 +20,8 @@ var	url = require('url'),
 	https = require('https'),
 	querystring = require('querystring'),
 	jsdom = require('jsdom');
+
+var	util = require('util');// DEBUG
 
 /**
  * SubmitForm - send a get/post and pass the results to the callback.
@@ -31,8 +33,8 @@ var	url = require('url'),
  * optional.timeout defaults to 30000 milliseconds).
  */
 var SubmitForm = function (action, form_data, callback, options) {
-	var defaults = { method:'POST', timeout:30000, protocol: "http:", port:80 }, 
-		parts = url.parse(action), req, timer_id, protocol_method = http;
+	var defaults = { method:'POST', timeout:30000, protocol: "http:" }, 
+		parts, req, timer_id, protocol_method = http;
 
 	// Setup options
 	if (options === undefined) {
@@ -43,6 +45,12 @@ var SubmitForm = function (action, form_data, callback, options) {
 			options[ky] = defaults[ky];
 		}
 	});
+	
+	if (options.method === 'GET') {
+		parts = url.parse(action + "?" + querystring.encode(form_data));
+	} else {
+		parts = url.parse(action)
+	}
 	Object.keys(parts).forEach(function (ky) {
 		options[ky] = parts[ky];
 	});
@@ -100,14 +108,18 @@ var SubmitForm = function (action, form_data, callback, options) {
 	req.on('error', function (err) {
 		return callback(err, null, options);
 	});
-	// Send the data
-	req.write(querystring.encode(form_data));
+
+	// Send the POST content if needed 
+	if (options.method === 'POST') {
+		req.write(querystring.encode(form_data));
+	}
 	req.end();
 		
 	timer_id = setTimeout(function () {
 		return callback("ERROR: timeout", null, options);
 	}, options.timeout);
 }; /* END SubmitForm(action, form_data, callback, options) */
+
 
 /**
  * FetchPage - read a file from the local disc or via http/https
@@ -133,12 +145,18 @@ var FetchPage = function(pathname, callback, options) {
 	Object.keys(parts).forEach(function(ky) {
 		options[ky] = parts[ky];
 	});
-	options.host = options.hostname;
+	//options.host = options.hostname;
 	if (options.pathname === undefined) {
 		options.path = '/';
 	} else {
-		options.path = options.pathname;
+		//options.path = options.pathname;
 	}
+
+	//if (options.method === undefined) {
+	//		options.method = 'GET';
+	//}
+	options.method = 'GET';
+	
 	// Process based on our expectations of where to read from.
 	if (options.protocol === undefined || options.prototcol === 'file:') {
 		fs.readFile(path.normalize(options.pathname), function(err, data) {
@@ -152,13 +170,11 @@ var FetchPage = function(pathname, callback, options) {
 			if (options.port === undefined) {
 				options.port = 80;
 			}
-			options.method = 'GET';
 			break;
 		case 'https:':
 			if (options.port === undefined) {
 				options.port = 443;
 			}
-			options.method = 'GET';
 			break;
 		default:
 			return callback("ERROR: unsupported protocol for " + pathname, null, pathname);
