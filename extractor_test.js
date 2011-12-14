@@ -153,7 +153,7 @@ TESTS.Spider = function () {
 	});
 };
 
-TESTS.SubmitForm = function () {
+TESTS.SubmitForm1 = function () {
 	var form_options = { method:'GET' }, form_data = { s:'npm', searchsubmit:'Search' };
 	test_expected += 1;
 	extractor.SubmitForm("http://blog.nodejs.org/", form_data, function (err, data, options) {
@@ -165,9 +165,28 @@ TESTS.SubmitForm = function () {
 		assert.equal(options.port, 80, "Should have port 80");
 		assert.equal(options.path, '/', "Should have path /");
 		assert.equal(options.method, 'GET', "Should have path GET");
-		assert.equal(options.timeout, 30000, "Should have 60000 for timeout.");		
+		assert.equal(options.timeout, 30000, "Should have 30000 for timeout.");		
 		test_completed += 1;
 		display("SubmitForm http://blog.nodejs.org/ completed processing (" + test_completed + "/" + test_expected + ")");
+	}, form_options);
+};
+
+TESTS.SubmitForm2 = function () {
+	var form_options = { method:'GET' }, form_data = { q:'extractor-js' };
+	test_expected += 1;
+	display("Running SubmitForm2 test.");
+	extractor.SubmitForm("https://github.com/search", form_data, function (err, data, options) {
+		assert.ok(! err, "Should not have an error from search request " + err);
+		assert.ok(data, "Should get some data back.");
+		assert.ok(data.match(/<\/html>/), "Should get the end of the html page response.");
+		assert.equal(options.protocol, 'https:', "Should have an http: for protocol.");
+		assert.equal(options.host, 'github.com', "Should have host github.com");
+		assert.equal(options.port, 443, "Should have port 443");
+		assert.equal(options.path, '/search', "Should have path /");
+		assert.equal(options.method, 'GET', "Should have path GET");
+		assert.equal(options.timeout, 30000, "Should have 30000 for timeout.");		
+		test_completed += 1;
+		display("SubmitForm https://github.com/search completed processing (" + test_completed + "/" + test_expected + ")");
 	}, form_options);
 };
 
