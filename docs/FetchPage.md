@@ -1,7 +1,7 @@
 FetchPage
 =========
-revision 0.0.5
---------------
+revision 0.0.7c
+---------------
 
 # FetchPage(pathname, callback)
 

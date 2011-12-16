@@ -1,7 +1,7 @@
 Scrape
 ======
-revision 0.0.5
---------------
+revision 0.0.7c
+---------------
 
 # Scrape(document_or_path, map, callback, cleaner, transformer)
 
