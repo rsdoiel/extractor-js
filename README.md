@@ -1,6 +1,6 @@
 extractor-js
 ============
-revision 0.0.7d
+revision 0.0.7e
 ---------------
 
 # Overview

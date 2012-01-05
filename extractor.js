@@ -11,7 +11,7 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.7d
+ * revision 0.0.7e
  */
 var	url = require('url'),
 	fs = require('fs'),
@@ -131,14 +131,52 @@ var SubmitForm = function (action, form_data, callback, options) {
  * defaults to 30000 milliseconds).
  */
 var FetchPage = function(pathname, callback, options) {
-	var pg, parts, timer_id, protocol_method = http;
+	var defaults = { response: false, timeout: 30000, method: 'GET' }, 
+		pg, parts, timer_id, protocol_method = http, finishUp;
+
 	// handle timeout
 	if (options === undefined) {
-		options = {};
+		options = defaults;
+	} else {
+		Object.keys(defaults).forEach(function (ky) {
+			if (options[ky] === undefined) {
+				options[ky] = defaults[ky];
+			}
+		});
 	}
-	if (options.timeout === undefined) {
-		options.timeout = 30000;
-	}
+
+	// local func to handle passing back the data and run the callback
+	finishUp = function (err, buf, pathname, res) {
+			if (timer_id) { clearTimeout(timer_id); }
+			if (options.response) {
+				// FIXME Need to handle buf if array or string
+				if (buf === null) {
+					return callback(err, null, pathname, res);
+				} 
+				else if (buf.join === undefined && buf.length > 0) {
+					return callback(null, buf.toString(), pathname, res);
+				}
+				else if (buf.join && buf.length) {
+					return callback(null, buf.join(""), pathname, res);
+				}
+				else {
+					return callback(err, null, pathname, res);
+				}
+			} else {
+				if (buf === null) {
+					return callback(err, null, pathname);
+				} 
+				else if (buf.join === undefined && buf.length > 0) {
+					return callback(null, buf.toString(), pathname);
+				}
+				else if (buf.join && buf.length) {
+					return callback(null, buf.join(""), pathname);
+				}
+				else {
+					return callback(err, null, pathname);
+				}
+			}
+	};
 
 	// Are we looking at the file system or a remote URL?
 	parts = url.parse(pathname);
@@ -148,19 +186,15 @@ var FetchPage = function(pathname, callback, options) {
 	//options.host = options.hostname;
 	if (options.pathname === undefined) {
 		options.path = '/';
-	} else {
-		//options.path = options.pathname;
 	}
 
-	//if (options.method === undefined) {
-	//		options.method = 'GET';
-	//}
+	// FetchPage always uses a GET
 	options.method = 'GET';
 	
 	// Process based on our expectations of where to read from.
 	if (options.protocol === undefined || options.prototcol === 'file:') {
 		fs.readFile(path.normalize(options.pathname), function(err, data) {
-			return callback(err, data, pathname);
+			finishUp(err, data, pathname, null);
 		});
 	} else {
 		switch (options.protocol) {
@@ -177,9 +211,10 @@ var FetchPage = function(pathname, callback, options) {
 			}
 			break;
 		default:
-			return callback("ERROR: unsupported protocol for " + pathname, null, pathname);
-		}		
-
+			finishUp("ERROR: unsupported protocol for " + pathname, null, pathname, null);
+			break;
+		}
+		
 		pg = protocol_method.get(options, function(res) {
 			var buf = [];
 			res.on('data', function(data) {
@@ -188,39 +223,20 @@ var FetchPage = function(pathname, callback, options) {
 				}
 			});
 			res.on('close', function() {
-				if (timer_id) { clearTimeout(timer_id); }
-				if (buf.length > 0) {
-					return callback(null, buf.join(""), pathname);
-				}
-				else {
-					return callback('Stream closed, No data returned', null, pathname);
-				}
+				finishUp('Stream closed, No data returned', buf, pathname, res);
 			});
 			res.on('end', function() {
-				if (timer_id) { clearTimeout(timer_id); }
-				if (buf.length > 0) {
-					return callback(null, buf.join(""), pathname);
-				}
-				else {
-					return callback('No data returned', null, pathname);
-				}
+				finishUp('No data returned', buf, pathname, res);
 			});
 			res.on('error', function(err) {
-				if (timer_id) { clearTimeout(timer_id); }
-				if (buf.length > 0) {
-					return callback(err, buf.join(""), pathname);
-				}
-				else {
-					return callback(err, null, pathname);
-				}
+				finshUp(res, err, buf, pathname);
 			});
 		}).on("error", function(err) {
-			if (timer_id) { clearTimeout(timer_id); }
-			return callback(err, null, pathname);
+			finishUp(err, null, pathname, null);
 		});
 
 		timer_id = setTimeout(function () {
-			return callback("ERROR: timeout " + pathname, null, pathname);
+			finishUp("ERROR: timeout " + pathname, null, pathname, null);
 		}, options.timeout);
 	}
 }; /* END: FetchPage(pathname, callback, options) */
@@ -228,30 +244,31 @@ var FetchPage = function(pathname, callback, options) {
 
 /**
  * Scrape - given a pathname (i.e. uri), 
- * an object of selectors (an object of key/selector strings),
- * and a callback scrape the content from the document.
- * cleaner and transform functions will be applied if supplied.
+ *	an object of selectors (an object of key/selector strings),
+ *	and a callback scrape the content from the document.
+ *	cleaner and transform functions will be applied if supplied.
  * @param document_or_path - the path (local or url) to the document to be processed,
- * or HTML source code
+ *	or HTML source code
  * @param selectors - an object with properties that are populated by querySelectorAll
- * (e.g. selectors = { title: 'title', body = '.main_content'}
- * would yeild an object with title and body properties based on the CSS
- * selectors passed)
+ *	(e.g. selectors = { title: 'title', body = '.main_content'}
+ *	would yeild an object with title and body properties based on the CSS
+ *	selectors passed)
  * @param options - can include 
- *      + cleaner - a function to cleanup the document BEFORE
+ *		+ cleaner - a function to cleanup the document BEFORE
  *		  processing with querySelectorAll. The cleaner is passed a string and returns a 
- *        cleaned up string.
- *      + transformer - a function to transform the scraped
- *        content (e.g. remove uninteresting markup. Transformer is called with 
- *        the maps' key and the value returned by querySelectorAll. It is expected to return
- *        a transformed value as a string.
- *      + features object -
- *		"features": {
- *			"FetchExternalResources": false,
- *			"ProcessExternalResources": false,
- *			"MutationEvents": false,
- *			"QuerySelector": ["2.0"]
- *		},
+ *		  cleaned up string.
+ *		+ transformer - a function to transform the scraped
+ *		  content (e.g. remove uninteresting markup. Transformer is called with 
+ *		  the maps' key and the value returned by querySelectorAll. It is expected to return
+ *		  a transformed value as a string.
+ *		+ response - if true, return the response object in callback otherwise omit
+ *		+ features object to pass to jsdom -
+ *			"features": {
+ *				"FetchExternalResources": false,
+ *				"ProcessExternalResources": false,
+ *				"MutationEvents": false,
+ *				"QuerySelector": ["2.0"]
+ *			}
  *		+ src - JavaScript source to apply to page
  */
 var Scrape = function(document_or_path, selectors, callback, options) {
@@ -268,6 +285,7 @@ var Scrape = function(document_or_path, selectors, callback, options) {
 	var defaults = {
 		"cleaner": null,
 		"transformer": null,
+		"response" : true,
 		"features": {
 			"FetchExternalResources": false,
 			"ProcessExternalResources": false,
@@ -345,7 +363,7 @@ var Scrape = function(document_or_path, selectors, callback, options) {
 							output[ky] = [];
 							Array.prototype.forEach.call(val, function (elem) {
 								output[ky].push(makeItem(elem));
-                        				});
+							});
 						} else if (val.length === 1) {
 							output[ky] = makeItem(val[0]);
 						}
