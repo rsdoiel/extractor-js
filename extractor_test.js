@@ -161,7 +161,6 @@ TESTS.Spider = function () {
 		assert.ok(data.anchors, "Should have anchors in page.");
 		assert.ok(data.images, "Should have at least the logo in the page.");
 		assert.ok(data.links, "Should have some links to CSS at least.");
-		//assert.fail("DEBUG expected results: " + util.inspect(expected_result));// DEBUG
 		assert.equal(expected_result.length, data.anchors.length, "Should have same lengths: " + expected_result.length + " != " + data.anchors.length);
 
 		data.anchors.forEach(function (anchor) {
