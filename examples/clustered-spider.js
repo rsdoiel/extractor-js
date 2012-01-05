@@ -151,15 +151,44 @@ if (cluster.isMaster) {
 		console.log("Total: " + tot + ", processed: " + processed + ", unprocessed: " + unprocessed);
 	});
 } else {
+	var processLink = function (base_parts, new_parts) {
+		if (new_parts.host === base_parts.host) {
+			if (path.extname(new_parts.pathname) === '') {
+				//urls.push(url.format(new_parts));
+				new_parts.pathname = path.join(new_parts.pathname,'index.html');
+			}
+			// Now add the discovered URL to the list if it is new.	
+			return url.format(new_parts);
+		} else if (new_parts.host === undefined) {
+			// Process as relative link
+			Object.keys(base_parts).forEach(function (ky) {
+				// Skip properties that shouldn't carry over.
+				if (["hash","search","query", "pathname"].indexOf(ky) < 0) {
+					if (new_parts[ky] === undefined) {
+						new_parts[ky] = base_parts[ky];
+					}
+				}
+				if (new_parts.pathname.substr(0,1) !== '/') {
+					if (path.extname(base_parts.pathname)) {
+						new_parts.pathname = path.join(path.dirname(base_parts.pathname), new_parts.pathname);
+					} else {
+						new_parts.pathname = path.join(base_parts.pathname, new_parts.pathname);
+					}
+				}
+			});
+			return url.format(new_parts);
+		}
+		return false;
+	};
+
 	process.on('message', function(m) {
 		console.log('CHILD (' + process.pid +  ') spidering:', m.url);
 		extractor.Spider(m.url, function(err, data, cur_url, res) {
-			var i, cut_pos, new_parts, new_url,
+			var i, new_parts, new_url,
 				urls = [], base_parts, base_path;
 			
 			base_parts = url.parse(cur_url);
 			base_path = base_parts.path;
-			cut_pos = base_path.length;
 		
 			if (err) {
 				console.error("ERROR: " + cur_url + ': ' + err);
@@ -169,27 +198,15 @@ if (cluster.isMaster) {
 					if (data.anchors.join && data.anchors.length !== undefined) {
 						for(i = 0; i < data.anchors.length; i += 1) {
 							if (data.anchors[i].href !== undefined) {
-								new_parts = url.parse(data.anchors[i].href);
-								if (new_parts.host === base_parts.host) {
-									if (path.extname(new_parts.pathname) === '') {
-										urls.push(url.format(new_parts));
-										new_parts.pathname = path.join(new_parts.pathname,'index.html');
-									}
-									new_url = url.format(new_parts);
-									// Now add the discovered URL to the list if it is new.	
-									urls.push(new_url);	
+								new_url = processLink(base_parts, url.parse(data.anchors[i].href));
+								if (new_url) {
+									urls.push(new_url);
 								}
 							}
 						}
 					} else if (data.anchors.href !== undefined) {
-						new_parts = url.parse(data.anchors.href);
-						if (new_parts.host === base_parts.host) {
-							if (path.extname(new_parts.pathname) === '') {
-								urls.push(url.format(new_parts));
-								new_parts.pathname = path.join(new_parts.pathname,'index.html');
-							}
-							// Now add the discovered URL to the list if it is new.
-							new_url = url.format(new_parts);
+						new_url = processLink(base_parts, url.parse(data.anchors.href));
+						if (new_url) {
 							urls.push(new_url);
 						}
 					}
