@@ -11,7 +11,7 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.7e
+ * revision 0.0.7f
  */
 var	url = require('url'),
 	fs = require('fs'),
@@ -21,7 +21,7 @@ var	url = require('url'),
 	querystring = require('querystring'),
 	jsdom = require('jsdom');
 
-var	util = require('util');// DEBUG
+//var	util = require('util');// DEBUG
 
 /**
  * SubmitForm - send a get/post and pass the results to the callback.
@@ -285,7 +285,7 @@ var Scrape = function(document_or_path, selectors, callback, options) {
 	var defaults = {
 		"cleaner": null,
 		"transformer": null,
-		"response" : true,
+		"response" : false,
 		"features": {
 			"FetchExternalResources": false,
 			"ProcessExternalResources": false,
@@ -342,7 +342,7 @@ var Scrape = function(document_or_path, selectors, callback, options) {
 		return val;
 	};// END: makeItem(elem)
     
-	var ScrapeIt = function(src, pname) {
+	var ScrapeIt = function(src, pname, res) {
 		if (typeof options.cleaner === 'function') {
 			src = options.cleaner(src);
 		}
@@ -374,7 +374,11 @@ var Scrape = function(document_or_path, selectors, callback, options) {
 					});
 
 					window.close();
-					return callback(null, output, pname);
+					if (options.response === true) {
+						return callback(null, output, pname, res);
+					} else {
+						return callback(null, output, pname);
+					}
 				}
 			});
 		} catch (err) {
@@ -387,13 +391,13 @@ var Scrape = function(document_or_path, selectors, callback, options) {
 	if (document_or_path.indexOf('<') > -1) {
 		ScrapeIt(document_or_path);
 	} else {
-		FetchPage(document_or_path, function(err, html, pname) {
+		FetchPage(document_or_path, function(err, html, pname, res) {
 			if (err) {
-				return callback(err, null, pname);
+				return callback(err, null, pname, res);
 			} else {
-				ScrapeIt(html, pname);
+				ScrapeIt(html, pname, res);
 			}
-		});
+		}, options);
 	}
 }; /* END: Scrape(document_or_path, selectors, callback, options) */
 
