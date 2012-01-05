@@ -9,13 +9,12 @@
  * See: http://opensource.org/licenses/bsd-license.php
  * 
  */
-
 var util = require('util'),
 	fs = require('fs'),
 	url = require('url'),
 	path = require('path'),
 	opt = require('opt'),
-	extractor = require('../extractor'),
+	extractor = require('extractor'),
 	dirty = require('dirty'), db,
 	cluster = require('cluster'),
 	numCPUs = require('os').cpus().length, stat;
@@ -152,6 +151,10 @@ if (cluster.isMaster) {
 	});
 } else {
 	var processLink = function (base_parts, new_parts) {
+		if (new_parts.protocol !== undefined &&
+			new_parts.protocol.match(/javascript/i)) {
+			return false;
+		}
 		if (new_parts.host === base_parts.host) {
 			if (path.extname(new_parts.pathname) === '') {
 				//urls.push(url.format(new_parts));
@@ -168,11 +171,18 @@ if (cluster.isMaster) {
 						new_parts[ky] = base_parts[ky];
 					}
 				}
-				if (new_parts.pathname.substr(0,1) !== '/') {
+				if (new_parts.pathname && 
+					new_parts.pathname.substr(0,1) !== "/") {
 					if (path.extname(base_parts.pathname)) {
 						new_parts.pathname = path.join(path.dirname(base_parts.pathname), new_parts.pathname);
 					} else {
 						new_parts.pathname = path.join(base_parts.pathname, new_parts.pathname);
+					}
+				} else if (base_parts.pathname && ! new_parts.pathname) {
+					if (path.extname(base_parts.pathname)) {
+						new_parts.pathname = path.dirname(base_parts.pathname);
+					} else {
+						new_parts.pathname = path.join(base_parts.pathname, "index.html");
 					}
 				}
 			});
