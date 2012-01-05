@@ -1,5 +1,5 @@
 /**
- * extractor-test.js - the tests cases for extractor.js
+ * extractor_test.js - the tests cases for extractor.js
  *
  * author: R. S. Doiel, <rsdoiel@gmail>
  *
@@ -8,7 +8,7 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.7c
+ * revision 0.0.7d
  */
 
 var TIMEOUT = 10,
@@ -145,7 +145,7 @@ TESTS.Scrape = function () {
 
 // Tests of Spider()
 TESTS.Spider = function () {
-	test_expected += 1;
+	test_expected += 2;
 	extractor.Spider("http://nodejs.org", function (err, data, pname) {
 		assert.ok(data.anchors, "Should have anchors in page.");
 		assert.ok(data.images, "Should have at least the logo in the page.");
@@ -153,6 +153,29 @@ TESTS.Spider = function () {
 		test_completed += 1;
 		display("Spider http://nodejs.org completed processing (" + test_completed + "/" + test_expected + ")");
 	});
+
+	extractor.Spider("test-data/test-3a.html", function (err, data, pname) {
+		var expected_result = [ 'http://www.usc.edu/its/webservices/','http://nodejs.org','http://go-lang.org','http://www.google.com/chromeos','http://its.usc.edu/~rsdoiel/wscore','wscore/README.txt','http://search.npmjs.org/#/_author/R.%20S.%20Doiel','https://github.com/rsdoiel/extractor-js','https://github.com/rsdoiel/tbone','http://www.npr.org/blogs/inside/2011/02/02/126312263/behind-the-code-avoiding-spaghetti-html','https://github.com/rsdoiel/tbone','https://github.com/rsdoiel/stn','https://github.com/rsdoiel/opt','demo','https://github.com/rsdoiel','cv.html' ], i, pos, anchor;
+		
+		assert.ok(! err, pname + ": " + err);
+		assert.ok(data.anchors, "Should have anchors in page.");
+		assert.ok(data.images, "Should have at least the logo in the page.");
+		assert.ok(data.links, "Should have some links to CSS at least.");
+		//assert.fail("DEBUG expected results: " + util.inspect(expected_result));// DEBUG
+		assert.equal(expected_result.length, data.anchors.length, "Should have same lengths: " + expected_result.length + " != " + data.anchors.length);
+
+		data.anchors.forEach(function (anchor) {
+			assert.ok(anchor.href, "Should have anchor.href for test-3a.html");
+			pos = expected_result.indexOf(anchor.href);
+			assert.ok(pos >= 0, "Should find " + anchor.href + " in expected array.");
+			if (pos >= 0) {
+				assert.ok(expected_result.splice(pos,1), "Should be able to remove " + pos + " position in expected array.");
+			}
+		});
+		assert.equal(expected_result.length, 0, "elements left over: " + JSON.stringify(expected_result));		
+		test_completed += 1;
+		display("Spider test-data/test-3a.html completed processing (" + test_completed + "/" + test_expected + ")");
+	});	
 };
 
 // Tests of SubmitForm()
