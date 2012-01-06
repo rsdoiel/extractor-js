@@ -11,7 +11,7 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.7f
+ * revision 0.0.7g
  */
 var	url = require('url'),
 	fs = require('fs'),
@@ -150,14 +150,14 @@ var FetchPage = function(pathname, callback, options) {
 			if (timer_id) { clearTimeout(timer_id); }
 			if (options.response) {
 				// FIXME Need to handle buf if array or string
-				if (buf === null) {
+				if (buf === undefined || buf === null) {
 					return callback(err, null, pathname, res);
-				} 
-				else if (buf.join === undefined && buf.length > 0) {
-					return callback(null, buf.toString(), pathname, res);
 				}
-				else if (buf.join && buf.length) {
+				else if (buf.join !== undefined && buf.length) {
 					return callback(null, buf.join(""), pathname, res);
+				}
+				else if (buf.length > 0) {
+					return callback(null, buf.toString(), pathname, res);
 				}
 				else {
 					return callback(err, null, pathname, res);
@@ -206,6 +206,7 @@ var FetchPage = function(pathname, callback, options) {
 			}
 			break;
 		case 'https:':
+			protocol_method = https;
 			if (options.port === undefined) {
 				options.port = 443;
 			}

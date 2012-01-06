@@ -9,28 +9,28 @@
  * See: http://opensource.org/licenses/bsd-license.php
  * 
  */
-var //util = require('util'),
+var util = require('util'),
 	fs = require('fs'),
 	url = require('url'),
 	path = require('path'),
 	opt = require('opt'),
-	extractor = require('extractor'),
+	extractor = require('../extractor'),
 	dirty = require('dirty'), db,
 	cluster = require('cluster'),
 	numCPUs = require('os').cpus().length, stat,
-    START_URLS = [],
+    START_URLS = [], restrictPath = false,
     // Functions
-    USAGE, setStartURLs,
-    onMessageToChild, onDeathOfChild, onExitOfChild;
+    USAGE, setStartURLs, setNumCPUs, setRestrictPath,
+    onMessageToChild, onDeathOfChild;
 
 USAGE = function (msg, error_level) {
-    var heading = " USAGE: node " + process.argv[1] + " --urls=STARTING_URL\n\n SYNOPSIS: Spider urls and build a database of links.\n",
+    var heading = "\n USAGE: node " + process.argv[1] + " --urls=STARTING_URL\n\n SYNOPSIS: Spider urls and build a database of links.\n",
         help = opt.help(), ky;
 
     if (error_level !== undefined) {
         console.error(heading);
         if (msg !== undefined) {
-            console.error(msg);
+            console.error(" " + msg + "\n");
         } else {
             console.error("ERROR: process exited with an error " + error_level);
         }
@@ -41,7 +41,9 @@ USAGE = function (msg, error_level) {
         console.log("\t" + ky + "\t\t" + help[ky]);     
     }
     console.log("\n\n");
-    console.log(msg);
+    if (msg !== undefined) {
+	    console.log(" " + msg + "\n");
+	}
     process.exit(0);
 };
 
@@ -55,7 +57,19 @@ setStartURLs = function (param) {
     }
 };
 
+setNumCPUs = function (param) {
+	if (param.match(/[0-9]+/)){
+		numCPUs = param;
+	}
+};
+
+setRestrictPath = function (param) {
+	restrictPath = param;
+};
+
 onMessageToChild = function(m) {
+	var work_parts, work_url;
+	
     if (m.processed_url !== undefined && m.found_urls !== undefined) {
 		if (m.found_urls.join && m.found_urls.length > 0) {
 			m.found_urls.forEach(function(work_url) {
@@ -64,16 +78,37 @@ onMessageToChild = function(m) {
 				if (work_url.indexOf('://') < 0) {
 					work_url = work_url.replace(/\:\//,'://');
 				}
-				row = db.get(work_url);
-				if (row === undefined) {
-					console.log("Discovered: " + work_url);
-					db.set(work_url, { url: work_url, processed: false });
+				// Remove # from url safely.
+				work_parts = url.parse(work_url);
+				if (work_parts.hash) {
+					delete work_parts.hash;
+				}
+				if (restrictPath !== false) {
+					if (work_parts.pathname.indexOf(restrictPath) === 0) {
+						work_url = url.format(work_parts);
+					} else {
+						work_url = false;
+					}
+				} else {
+					work_url = url.format(work_parts);
+				}
+				if (work_url !== false) {
+					row = db.get(work_url);
+					if (row === undefined) {
+						console.log("Discovered: " + work_url);
+						db.set(work_url, { url: work_url, processed: false });
+					}
 				}
 			});
 		}
 		if (m.processed_url) {
-			console.log("Processed: " + m.processed_url);
-			db.set(m.processed_url, {url: m.processed_url, processed: true});
+			work_parts = url.parse(m.processed_url);
+			if (work_parts.hash) {
+				delete work_parts.hash;
+			}
+			work_url = url.format(work_parts);		
+			console.log("Processed: " + work_url);
+			db.set(work_url, {url: work_url, processed: true});
 		}
 	}
 };
@@ -81,17 +116,12 @@ onMessageToChild = function(m) {
 onDeathOfChild = function (worker) {
     console.error("ERROR: worker died: " + worker.pid);
 };
-    
-onExitOfChild = function (err_no) {
-    if (err_no) {
-        console.log("worker " + process.pid + " exited with error no: " + err_no);
-    }
-};
 
 if (cluster.isMaster) {
-    opt.set(['-h','--help'], function () {
-    }, "Help message");
-    opt.set(['-u','--urls'], setStartURLs, "The starting url(s) to run the spider over.");
+    opt.set(['-u', '--urls'], setStartURLs, "The starting url(s) to run the spider over.");
+    opt.set(['-t', '--thread-count'], setNumCPUs, "Set the number of threads used by spider. Default is the number of CPUs available.");
+    opt.set(['-r', '--restrict-path'], setRestrictPath, "Only spider for a specific path. E.g. -r /my/stuff would only spider folders that start with /my/stuff.");
+    opt.set(['-h', '--help'], USAGE, "Help message");
     opt.parse(process.argv);
     
 	if (process.argv.length <= 2) {
@@ -99,36 +129,31 @@ if (cluster.isMaster) {
 		try {
 			stat = fs.statSync('spider.db');		
 		} catch (err) {
-			console.error("USAGE: node " + process.argv[1] + " STARTING_URL\n");
-			process.exit(1);			
+			USAGE("Missing spider.db, must provide STARTING_URL.", 1);			
 		}
 		if (stat.isFile() !== true) {
-			console.error("USAGE: node " + process.argv[1] + " STARTING_URL\n");
-			process.exit(1);			
+			USAGE("spider.db is not a file.", 1);			
 		}
 	}
 	db = dirty('spider.db');
 
-	console.log("PARENT numCPUs: " + numCPUs);
+	console.log("PARENT No. of threads: " + numCPUs);
 	console.log("PARENT pid: " + process.pid);
 	console.log("PARENT loading db ...");
 	db.on('load', function() {
-		var n = [], i, count_down;
+		var n = [], i, count_down, interval_id;
+
 		// Seed the DB
-		for (i = 2; i < process.argv.length; i++) {
-			db.set(process.argv[i], { url: process.argv[i], processed: false });
-		}
+		START_URLS.forEach(function(start_url) {
+			db.set(start_url, { url: start_url, processed: false });
+		});
 		
 		// Fork and setup the children
 		for (i = 0; i < numCPUs; i++ ) {
 			n.push(cluster.fork());
 			console.log("PARENT Forked child with pid: " + n[i].pid);
-
 			n[i].on('message', onMessageToChild);
-		
 			n[i].on('death', onDeathOfChild);
-
-			n[i].on('exit', onExitOfChild);
 		}
 
 		i = 0;
@@ -148,10 +173,10 @@ if (cluster.isMaster) {
 
 		// Setup an service for sending message to child
 		count_down = 3;
-		var interval_id = setInterval(function() {
+		interval_id = setInterval(function() {
 			var i = 0, j = 0, k = 0;
 			db.forEach(function(ky, val) {
-				if (val.processed) {
+				if (ky && val.processed) {
 					k += 1;
 				} else {
 					if (i < numCPUs) {
@@ -234,6 +259,9 @@ if (cluster.isMaster) {
 					}
 				}
 			});
+			if (new_parts.hash) {
+				delete new_parts.hash;
+			}
 			return url.format(new_parts);
 		}
 		return false;
@@ -271,7 +299,11 @@ if (cluster.isMaster) {
 				}
 			}
 			// Send the URLs found to the master process
-			process.send({processed_url: cur_url, found_urls: urls, statusCode: res.statusCode, headers: res.headers});
+			if (res) {
+				process.send({processed_url: cur_url, found_urls: urls, statusCode: res.statusCode, headers: res.headers});
+			} else {
+				process.send({processed_url: cur_url, found_urls: urls});
+			}
 		}, {response:true});
 	});	// End process.on("message", ...);
 }
