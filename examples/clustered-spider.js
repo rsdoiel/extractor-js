@@ -75,7 +75,7 @@ onMessageToChild = function(m) {
 			m.found_urls.forEach(function(work_url) {
                 var row;
                             
-				if (work_url.indexOf('://') < 0) {
+				if (work_url.indexOf('://') < 0 && work_url.indexOf(':/') > 0) {
 					work_url = work_url.replace(/\:\//,'://');
 				}
 				// Remove # from url safely.
