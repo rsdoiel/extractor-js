@@ -1,5 +1,5 @@
 /**
- * cluster-spider: demo of a re-startable clustered spider
+ * spider.js: a re-startable clustered spider
  *
  * author: R. S. Doiel, <rsdoiel@gmail>
  *
@@ -71,18 +71,27 @@ setRestrictPath = function (param) {
 	restrictPath = param;
 };
 
-makeRecord = function (url, rec) {
-	var defaults = { processed: false, linked_from: [], linking_to: [] };
-
-	if (url !== undefined) {
-		defaults.url = url;
-	}
-	if (rec !== undefined) {
-		Object.keys(rec).forEach(function (ky) {
-			defaults[ky] = rec[ky];
-		});
-	}
-	return defaults;
+/**
+ * makeRecord - generates and empty Record or merges a
+ * an Existing Record. Records to process data with Spider.
+ * @param record - a JavaScript Object with  Spider properties
+ * @param updates - an object with only the properties needing to be updated.
+ * @returns a new Record
+ */
+makeRecord = function (record, updates) {
+        var defaults = {url:'', process_status: false, ed_to_urls : [], ed_from_urls: [], response_header: false };
+        
+        if (record !== undefined) {
+                Object.keys(record).forEach(function (ky) {
+                        defaults[ky] = record[ky];
+                });
+        }
+        if (updates !== undefined) {
+                Object.keys(updates).forEach(function(ky) {
+                        defaults[ky] = updates[ky];
+                });
+        }
+        return defaults;
 };
 
 onMessageToChild = function (m) {
@@ -123,7 +132,7 @@ onMessageToChild = function (m) {
 					row = db.get(work_url);
 					if (row === undefined) {
 						console.log("Discovered: " + work_url);
-						db.set(work_url, makeRecord(work_url));
+						db.set(work_url, makeRecord({ url: work_url}));
 					}
 				}
 			});
@@ -138,10 +147,11 @@ onMessageToChild = function (m) {
 			console.log("Processed: " + processed_url);
 			rec = db.get(processed_url);
 			if (rec === undefined) {
-				rec = makeRecord(processed_url);
+				rec = makeRecord({url: processed_url});
 			} else {
+				rec.url = processed_url;
 				rec.processed = true;
-				rec = makeRecord(processed_url, rec);
+				rec = makeRecord(rec);
 			}
 			db.set(processed_url, rec);
 		}
@@ -198,7 +208,7 @@ if (cluster.isMaster) {
 			if (rec) {
 				rec.processed = false;
 			} else {
-				rec = makeRecord(start_url);
+				rec = makeRecord({url: start_url});
 				rec.processed = false;
 			}
 			db.set(start_url, rec);
@@ -228,7 +238,6 @@ if (cluster.isMaster) {
 			i += 1;
 			i = i % numCPUs;
 		});
-
 
 		// Setup an service for sending message to child
 		count_down = 3;
@@ -365,3 +374,13 @@ if (cluster.isMaster) {
 		}, {response:true});
 	});	// End process.on("message", ...);
 }
+
+/* FIXME, make so this can run as a module or cmd line app
+
+if (require.main === module) {
+	// FIXME: Process command line args and run Spider
+} else {
+	// FIXME: Export the Spider and main functions.
+	exports.SOMETHING ....
+}
+*/
