@@ -38,13 +38,14 @@ var SubmitForm = function (action, form_data, callback, options) {
 
 	// Setup options
 	if (options === undefined) {
-		options = {};
+		options = defaults;
+	} else {
+		Object.keys(defaults).forEach(function (ky) {
+			if (options[ky] === undefined) {
+				options[ky] = defaults[ky];
+			}
+		});
 	}
-	Object.keys(defaults).forEach(function (ky) {
-		if (options[ky] === undefined) {
-			options[ky] = defaults[ky];
-		}
-	});
 	
 	if (options.method === 'GET') {
 		parts = url.parse(action + "?" + querystring.encode(form_data));

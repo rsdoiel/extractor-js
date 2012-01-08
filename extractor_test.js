@@ -14,6 +14,7 @@
 var TIMEOUT = 10,
     util = require('util'),
     path = require('path'),
+    url = require('url'),
     querystring = require('querystring'),
     assert = require('assert'),
     extractor = require('./extractor'),
@@ -249,7 +250,7 @@ TESTS.SubmitForm = function () {
 		form_data = { s:'npm', searchsubmit:'Search' };
 		hostname = 'blog.nodejs.org';
 		pathname = '';
-		uri = ['http:/', hostname, pathname].join('/');
+		uri = url.format({ protocol: 'http', hostname: hostname, pathname: pathname})
 		display("Running SubmitForm test " + uri);
 		extractor.SubmitForm(uri, form_data, function (err, data, options) {
 			assert.ok(! err, uri + ": " + err);
@@ -275,7 +276,7 @@ TESTS.SubmitForm = function () {
 		form_data = { q: 'extractor-js' };
 		hostname = 'github.com';
 		pathname = 'search';
-		uri = ['https:/', hostname, pathname].join('/');
+		uri = url.format({ protocol: 'https', hostname: hostname, pathname: pathname});
 		display("Running SubmitForm test " + uri);
 		extractor.SubmitForm(uri, form_data, function (err, data, options) {
 			assert.ok(! err, uri + ": " + err);
@@ -291,7 +292,6 @@ TESTS.SubmitForm = function () {
 			display("SubmitForm " + uri + " completed processing (" + test_completed + "/" + test_expected + ")");
 		}, form_options);
 	}());
-
 	
 	// http POST
 	// https POST	
@@ -305,6 +305,7 @@ for (ky in TESTS) {
 		TESTS[ky]();
 	}
 }
+
 var waiting = 0;
 setInterval(function () {
 	display();

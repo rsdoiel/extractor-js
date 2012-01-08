@@ -53,7 +53,7 @@ setDatabase = function (param) {
 
 setStartURLs = function (param) {
 	if (param.indexOf(',')) {
-		param.split(',').forEach(function(start_url) {
+		param.split(',').forEach(function (start_url) {
 			START_URLS.push(start_url.trim());
 		});
 	} else {
@@ -78,14 +78,14 @@ makeRecord = function (url, rec) {
 		defaults.url = url;
 	}
 	if (rec !== undefined) {
-		Object.keys(rec).forEach(function(ky) {
+		Object.keys(rec).forEach(function (ky) {
 			defaults[ky] = rec[ky];
 		});
 	}
 	return defaults;
 };
 
-onMessageToChild = function(m) {
+onMessageToChild = function (m) {
 	var rec, processed_parts, processed_url;
 
 	if (m.processed_url !== undefined) {
@@ -96,7 +96,7 @@ onMessageToChild = function(m) {
 
 	if (m.processed_url !== undefined && m.found_urls !== undefined) {
 		if (m.found_urls.join && m.found_urls.length > 0) {
-			m.found_urls.forEach(function(work_url) {
+			m.found_urls.forEach(function (work_url) {
 				var row, work_parts;
 
 				if (work_url.indexOf('://') < 0 && work_url.indexOf(':/') > 0) {
@@ -177,13 +177,13 @@ if (cluster.isMaster) {
 	console.log("PARENT pid: " + process.pid);
 	console.log("PARENT loading " + DatabaseName + " ...");
 	if (START_URLS.length > 0) {
-		console.log("PARENT Starting URL(s):\n\t" + START_URLS.join("\n\t") + "\n");
+		console.log("PARENT Starting URL(s):\n\t" + START_URLS.join("\n\t"));
 	}
-	db.on('load', function() {
+	db.on('load', function () {
 		var n = [], i, count_down, interval_id;
 
 		// Seed the DB
-		START_URLS.forEach(function(start_url) {
+		START_URLS.forEach(function (start_url) {
 			var rec, start_parts;
 
 			if (start_url.indexOf('://') < 0) {
@@ -216,7 +216,7 @@ if (cluster.isMaster) {
 		}
 
 		i = 0;
-		db.forEach(function(ky, val) {
+		db.forEach(function (ky, val) {
 			if (val.processed === false) {
 				if (ky.indexOf('://') < 0) {
 					ky = ky.replace(/\:\//,'://');
@@ -232,9 +232,9 @@ if (cluster.isMaster) {
 
 		// Setup an service for sending message to child
 		count_down = 3;
-		interval_id = setInterval(function() {
+		interval_id = setInterval(function () {
 			var i = 0, j = 0, k = 0;
-			db.forEach(function(ky, val) {
+			db.forEach(function (ky, val) {
 				if (ky && val.processed) {
 					k += 1;
 				} else {
@@ -269,7 +269,7 @@ if (cluster.isMaster) {
 		}, 10000);
 	});
 	
-	db.on('drain', function() {
+	db.on('drain', function () {
 		var tot = 0, processed = 0, unprocessed = 0;
 		db.forEach(function (ky, val) {
 			if (ky && val.processed) {
@@ -326,15 +326,14 @@ if (cluster.isMaster) {
 		return false;
 	};
 
-	process.on('message', function(m) {
+	process.on('message', function (m) {
 		console.log('CHILD (' + process.pid +  ') spidering:', m.url);
-		extractor.Spider(m.url, function(err, data, cur_url, res) {
-			var i, new_url,
-				urls = [], base_parts, base_path;
-			
+		extractor.Spider(m.url, function (err, data, cur_url, res) {
+			var i, new_url, urls = [], base_parts, base_path;
+
 			base_parts = url.parse(cur_url);
 			base_path = base_parts.path;
-		
+
 			if (err) {
 				console.error("ERROR: " + cur_url + ': ' + err);
 			} else if (data) {
