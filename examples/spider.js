@@ -307,41 +307,9 @@ runChild = function (options) {
 			new_parts.protocol.match(/javascript/i)) {
 			return false;
 		}
-		if (new_parts.host === base_parts.host) {
-			if (path.extname(new_parts.pathname) === '') {
-				//urls.push(url.format(new_parts));
-				new_parts.pathname = path.join(new_parts.pathname,'index.html');
-			}
-			// Now add the discovered URL to the list if it is new.	
-			return url.format(new_parts);
-		} else if (new_parts.host === undefined) {
-			// Process as relative link
-			Object.keys(base_parts).forEach(function (ky) {
-				// Skip properties that shouldn't carry over.
-				if (["hash","search","query", "pathname"].indexOf(ky) < 0) {
-					if (new_parts[ky] === undefined) {
-						new_parts[ky] = base_parts[ky];
-					}
-				}
-				if (new_parts.pathname && 
-					new_parts.pathname.substr(0,1) !== "/") {
-					if (path.extname(base_parts.pathname)) {
-						new_parts.pathname = path.join(path.dirname(base_parts.pathname), new_parts.pathname);
-					} else {
-						new_parts.pathname = path.join(base_parts.pathname, new_parts.pathname);
-					}
-				} else if (base_parts.pathname && ! new_parts.pathname) {
-					if (path.extname(base_parts.pathname)) {
-						new_parts.pathname = path.dirname(base_parts.pathname);
-					} else {
-						new_parts.pathname = path.join(base_parts.pathname, "index.html");
-					}
-				}
-			});
-			if (new_parts.hash) {
-				delete new_parts.hash;
-			}
-			return url.format(new_parts);
+		if (new_parts.host === undefined ||
+			new_parts.host === base_parts.host) {
+			return url.resolve(url.format(base_parts), url.format(new_parts));
 		}
 		return false;
 	};

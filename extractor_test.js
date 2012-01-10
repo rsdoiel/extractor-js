@@ -11,7 +11,7 @@
  * revision 0.0.7h
  */
 
-var TIMEOUT = 10,
+var TIMEOUT = 50,
     util = require('util'),
     path = require('path'),
     url = require('url'),
@@ -146,13 +146,15 @@ TESTS.Scrape = function () {
 
 // Tests of Spider()
 TESTS.Spider = function () {
-	test_expected += 3;
-	extractor.Spider("http://nodejs.org", function (err, data, pname) {
-		assert.ok(data.anchors, "Should have anchors in page.");
+	test_expected += 4;
+	extractor.Spider("http://its.usc.edu/~rsdoiel/index.html", function (err, data, pname) {
+		assert.ok(! err, "Should not have error: " + err + " from " + pname);
+		assert.ok(data, "Should have data from " + pname);
+		assert.ok(data.anchors !== undefined, "Should have anchors in page (" + pname + ")");
 		assert.ok(data.images, "Should have at least the logo in the page.");
 		assert.ok(data.links, "Should have some links to CSS at least.");
 		test_completed += 1;
-		display("Spider http://nodejs.org completed processing (" + test_completed + "/" + test_expected + ")");
+		display("Spider " + pname + " completed processing (" + test_completed + "/" + test_expected + ")");
 	});
 
 	extractor.Spider("test-data/test-3a.html", function (err, data, pname) {
@@ -169,7 +171,7 @@ TESTS.Spider = function () {
 			'https://github.com/rsdoiel', 'cv.html' ], i, pos, anchor;
 		
 		assert.ok(! err, pname + ": " + err);
-		assert.ok(data.anchors, "Should have anchors in page.");
+		assert.ok(data.anchors !== undefined, "Should have anchors in page (" + pname + ")");
 		assert.ok(data.images, "Should have at least the logo in the page.");
 		assert.ok(data.links, "Should have some links to CSS at least.");
 		assert.equal(expected_result.length, data.anchors.length, "Should have same lengths: " + expected_result.length + " != " + data.anchors.length);
@@ -220,7 +222,7 @@ TESTS.Spider = function () {
 			"index.html" ], i, pos, anchor;
 		
 		assert.ok(! err, pname + ": " + err);
-		assert.ok(data.anchors, "Should have anchors in page.");
+		assert.ok(data.anchors, "Should have anchors in page (" + pname + ")");
 		assert.ok(! data.images, "Should NOT have images.");
 		assert.ok(data.links, "Should have some links to CSS at least.");
 		assert.equal(expected_result.length, data.anchors.length, "Should have same lengths: " + expected_result.length + " != " + data.anchors.length);
@@ -236,6 +238,21 @@ TESTS.Spider = function () {
 		assert.equal(expected_result.length, 0, "elements left over: " + JSON.stringify(expected_result));		
 		test_completed += 1;
 		display("Spider test-data/test-3b.html completed processing (" + test_completed + "/" + test_expected + ")");
+	});
+
+	extractor.Spider("test-data/test-4.html", function (err, data, pname) {
+		var i;
+		assert.ok(! err, "Should not get an error on test-4.html: " + err);
+		assert.ok(data, "Should get back data for test-4.html");
+		assert.ok(data.anchors !== undefined, "Should have anchors in page (" + pname + ")");
+		assert.ok(data.anchors.length > 10000, "Should get more then 10k anchors back.");
+		//display("DEBUG data: " + util.inspect(data.anchors));// DEBUG
+		for (i = 0; i < data.anchors.length; i += 1) {
+			assert.ok(data.anchors[i].href, "Should get an href for " + i + "th anchor");
+			console.log("DEBUG href: " + data.anchors[i].href);
+		}
+		test_completed += 1;
+		display("Spider test-data/test-4.html completed processing (" + test_completed + "/" + test_expected + ")");
 	});
 
 };
