@@ -11,7 +11,7 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.7h
+ * revision 0.0.8
  */
 var	url = require('url'),
 	fs = require('fs'),
@@ -19,7 +19,7 @@ var	url = require('url'),
 	http = require('http'),
 	https = require('https'),
 	querystring = require('querystring'),
-	jsdom = require('jsdom');
+	jsdom = require('jsdom').jsdom;
 
 //var	util = require('util');// DEBUG
 
@@ -27,15 +27,19 @@ var	url = require('url'),
  * SubmitForm - send a get/post and pass the results to the callback.
  * @param action - the url hosting the form processor (e.g. 'http://example.com/form-processor.php')
  * @param form_data - the form field name/values to submit
- * @param callback - the callback to use when you get a response from the form submission. Args past
- * to the callback function are err, data and options.
  * @param options - a set of properties to modify SubmitForm behavior (e.g. options.method defaults to POST,
  * optional.timeout defaults to 30000 milliseconds).
+ * @param callback - the callback to use when you get a response from the form submission. Args past
+ * to the callback function are err, data and environment.
  */
-var SubmitForm = function (action, form_data, callback, options) {
+var SubmitForm = function (action, form_data, options, callback) {
 	var defaults = { method:'POST', timeout:30000, protocol: "http:" }, 
 		parts, req, timer_id, protocol_method = http;
 
+	if (typeof arguments[2] === 'function') {
+		callback = arguments[2];
+		options = {};
+	}
 	// Setup options
 	if (options === undefined) {
 		options = defaults;
@@ -50,7 +54,7 @@ var SubmitForm = function (action, form_data, callback, options) {
 	if (options.method === 'GET') {
 		parts = url.parse(action + "?" + querystring.encode(form_data));
 	} else {
-		parts = url.parse(action)
+		parts = url.parse(action);
 	}
 	Object.keys(parts).forEach(function (ky) {
 		options[ky] = parts[ky];
@@ -59,16 +63,20 @@ var SubmitForm = function (action, form_data, callback, options) {
 	// Process form request
 	if (options.protocol === 'http:') {
 		protocol_method = http;
+		/*
 		if (options.port === undefined) {
 			options.port = 80;
 		}
+		*/
 	} else if (options.protocol === 'https:') {
 		protocol_method = https;
+		/*
 		if (options.port === undefined) {
 			options.port = 443;
 		}
+		*/
 	} else {
-		return callback("ERROR: protocol not supported", null, options);
+		return callback("ERROR: protocol not supported", null, {options:options});
 	}
 
 	req = protocol_method.request(options, function(res) {
@@ -81,33 +89,33 @@ var SubmitForm = function (action, form_data, callback, options) {
 		res.on('close', function() {
 			if (timer_id) { clearTimeout(timer_id); }
 			if (buf.length > 0) {
-				return callback(null, buf.join(""), options);
+				return callback(null, buf.join(""), {options:options});
 			}
 			else {
-				return callback('Stream closed, No data returned', null, options);
+				return callback('Stream closed, No data returned', null, {options:options});
 			}
 		});
 		res.on('end', function() {
 			if (timer_id) { clearTimeout(timer_id); }
 			if (buf.length > 0) {
-				return callback(null, buf.join(""), options);
+				return callback(null, buf.join(""), {options:options});
 			}
 			else {
-				return callback('No data returned', null, options);
+				return callback('No data returned', null, {options: options});
 			}
 		});
 		res.on('error', function(err) {
 			if (timer_id) { clearTimeout(timer_id); }
 			if (buf.length > 0) {
-				return callback(err, buf.join(""), options);
+				return callback(err, buf.join(""), {options: options});
 			}
 			else {
-				return callback(err, null, options);
+				return callback(err, null, {options: options});
 			}
 		});
 	});
 	req.on('error', function (err) {
-		return callback(err, null, options);
+		return callback(err, null, {options: options});
 	});
 
 	// Send the POST content if needed 
@@ -117,23 +125,28 @@ var SubmitForm = function (action, form_data, callback, options) {
 	req.end();
 		
 	timer_id = setTimeout(function () {
-		return callback("ERROR: timeout", null, options);
+		return callback("ERROR: timeout", null, {options: options});
 	}, options.timeout);
-}; /* END SubmitForm(action, form_data, callback, options) */
+}; /* END SubmitForm(action, form_data, options, callback) */
 
 
 /**
  * FetchPage - read a file from the local disc or via http/https
  * @param pathname - a disc path or url to the document you want to
  * read in and process with the callback.
- * @param callback - the callback you want to run when you have the file. The 
- * callback will be passed an error, data (buffer stream) and the path where it came from.
  * @param options - a set of properties to modify FetchPage behavior (e.g. optional.timeout  
  * defaults to 30000 milliseconds).
+ * @param callback - the callback you want to run when you have the file. The 
+ * callback will be passed an error, data (buffer stream), and environment (e.g. the path where it came from).
  */
-var FetchPage = function(pathname, callback, options) {
+var FetchPage = function(pathname, options, callback) {
 	var defaults = { response: false, timeout: 30000, method: 'GET' }, 
 		pg, parts, timer_id, protocol_method = http, finishUp;
+
+	if (typeof arguments[1] === 'function') {
+		callback = arguments[1];
+		options = {};
+	}
 
 	// handle timeout
 	if (options === undefined) {
@@ -147,36 +160,28 @@ var FetchPage = function(pathname, callback, options) {
 	}
 
 	// local func to handle passing back the data and run the callback
-	finishUp = function (err, buf, pathname, res) {
-			if (timer_id) { clearTimeout(timer_id); }
-			if (options.response) {
-				// FIXME Need to handle buf if array or string
-				if (buf === undefined || buf === null) {
-					return callback(err, null, pathname, res);
-				}
-				else if (buf.join !== undefined && buf.length) {
-					return callback(null, buf.join(""), pathname, res);
-				}
-				else if (buf.length > 0) {
-					return callback(null, buf.toString(), pathname, res);
-				}
-				else {
-					return callback(err, null, pathname, res);
-				}
-			} else {
-				if (buf === null) {
-					return callback(err, null, pathname);
-				} 
-				else if (buf.join === undefined && buf.length > 0) {
-					return callback(null, buf.toString(), pathname);
-				}
-				else if (buf.join && buf.length) {
-					return callback(null, buf.join(""), pathname);
-				}
-				else {
-					return callback(err, null, pathname);
-				}
-			}
+	finishUp = function (err, buf, res) {
+		var env = {};
+		// Setup the enviroment to return to the callback
+		env.pathname = pathname;
+		env.options = options;
+
+		if (timer_id) { clearTimeout(timer_id); }
+		if (options.response === true && res) {
+			env.response = res;
+		}
+		if (buf === undefined || buf === null) {
+			return callback(err, null, env);
+		}
+		else if (buf.join !== undefined && buf.length) {
+			return callback(null, buf.join(""), env);
+		}
+		else if (buf.length > 0) {
+			return callback(null, buf.toString(), env);
+		}
+		else {
+			return callback(err, null, env);
+		}
 	};
 
 	// Are we looking at the file system or a remote URL?
@@ -184,18 +189,14 @@ var FetchPage = function(pathname, callback, options) {
 	Object.keys(parts).forEach(function(ky) {
 		options[ky] = parts[ky];
 	});
-	//options.host = options.hostname;
-	if (options.pathname === undefined) {
-		options.path = '/';
-	}
 
 	// FetchPage always uses a GET
 	options.method = 'GET';
 	
 	// Process based on our expectations of where to read from.
-	if (options.protocol === undefined || options.prototcol === 'file:') {
+	if (options.protocol === undefined || options.protocol === 'file:') {
 		fs.readFile(path.normalize(options.pathname), function(err, data) {
-			finishUp(err, data, pathname, null);
+			finishUp(err, data);
 		});
 	} else {
 		switch (options.protocol) {
@@ -213,7 +214,7 @@ var FetchPage = function(pathname, callback, options) {
 			}
 			break;
 		default:
-			finishUp("ERROR: unsupported protocol for " + pathname, null, pathname, null);
+			finishUp("ERROR: unsupported protocol for " + pathname, null);
 			break;
 		}
 		
@@ -225,23 +226,23 @@ var FetchPage = function(pathname, callback, options) {
 				}
 			});
 			res.on('close', function() {
-				finishUp('Stream closed, No data returned', buf, pathname, res);
+				finishUp('Stream closed, No data returned', buf, res);
 			});
 			res.on('end', function() {
-				finishUp('No data returned', buf, pathname, res);
+				finishUp('No data returned', buf, res);
 			});
 			res.on('error', function(err) {
-				finishUp(res, err, buf, pathname);
+				finishUp(err, buf, res);
 			});
 		}).on("error", function(err) {
-			finishUp(err, null, pathname, null);
+			finishUp(err, null);
 		});
 
 		timer_id = setTimeout(function () {
-			finishUp("ERROR: timeout " + pathname, null, pathname, null);
+			finishUp("ERROR: timeout " + pathname, null);
 		}, options.timeout);
 	}
-}; /* END: FetchPage(pathname, callback, options) */
+}; /* END: FetchPage(pathname, options, callback) */
 
 
 /**
@@ -272,8 +273,16 @@ var FetchPage = function(pathname, callback, options) {
  *				"QuerySelector": ["2.0"]
  *			}
  *		+ src - JavaScript source to apply to page
+ * @param callback - the callback function to process the results
  */
-var Scrape = function(document_or_path, selectors, callback, options) {
+var Scrape = function(document_or_path, selectors, options, callback) {
+	var env = {};
+
+	if (typeof arguments[2] === 'function') {
+		callback = arguments[2];
+		options = {};
+	}
+
 	if (typeof callback !== 'function') {
 		throw ("callback is not a function");
 	}
@@ -308,6 +317,17 @@ var Scrape = function(document_or_path, selectors, callback, options) {
 				options[ky] = defaults[ky];
 			}
 		});
+	}
+	
+	// Setup env to pass to callback
+	env.selectors = selectors;
+	env.options = options;
+	if (document_or_path.indexOf('<') < 0) {
+		env.pathname = document_or_path;
+		env.source = null;
+	} else {
+		env.source = document_or_path;
+		env.pathname = null;
 	}
 
 	/**
@@ -345,7 +365,7 @@ var Scrape = function(document_or_path, selectors, callback, options) {
 		return val;
 	};// END: makeItem(elem)
     
-	var ScrapeIt = function(src, pname, res) {
+	var ScrapeIt = function(src, env) {
 		if (typeof options.cleaner === 'function') {
 			src = options.cleaner(src);
 		}
@@ -357,7 +377,7 @@ var Scrape = function(document_or_path, selectors, callback, options) {
 				done : function(err, window) {
 					var output = {}, val;
 					if (err) {
-						return callback(err, null, pname);
+						return callback(err, null, env);
 					}
 					Object.keys(selectors).forEach(function (ky) {
 						val = window.document.querySelectorAll(selectors[ky]);
@@ -379,44 +399,47 @@ var Scrape = function(document_or_path, selectors, callback, options) {
 					});
 
 					window.close();
-					if (options.response === true) {
-						return callback(null, output, pname, res);
-					} else {
-						return callback(null, output, pname);
+					if (options.response === true && res !== undefined) {
+						env.response = res;
 					}
+					return callback(null, output, env);
 				}
 			});
 		} catch (err) {
-			return callback("DOM processing error: " + err, null, pname);
+			return callback("DOM processing error: " + err, null, env);
 		}
-	}; // END ScrapeIt(src, pname)
+	}; // END ScrapeIt(src, env)
 
 	// If pathname is a path or URL then fetch a page, otherwise process
 	// it as the HTML src.
 	if (document_or_path.indexOf('<') > -1) {
-		ScrapeIt(document_or_path);
+		ScrapeIt(document_or_path, env);
 	} else {
-		FetchPage(document_or_path, function(err, html, pname, res) {
+		FetchPage(document_or_path, options, function(err, html, env) {
 			if (err) {
-				return callback(err, null, pname, res);
+				return callback(err, null, env);
 			} else {
-				ScrapeIt(html, pname, res);
+				ScrapeIt(html, env);
 			}
-		}, options);
+		});
 	}
-}; /* END: Scrape(document_or_path, selectors, callback, options) */
+}; /* END: Scrape(document_or_path, selectors, options, callback) */
 
 
 /**
  * Spider - extract anchors, images, links, and script urls from a page.
  * @param document_or_path
- * @param callback - callback for when you have all your scraped content
  * @param options - optional functions,settings to cleanup source before Scraping
+ * @param callback - callback for when you have all your scraped content
  * @return object with assets property and links property
  */
-var Spider = function (document_or_path, callback, options) {
+var Spider = function (document_or_path, options, callback) {
 	var map = { anchors: 'a', images: 'img', scripts: 'script', links:'link' };
-	Scrape(document_or_path, map, callback, options);
+	if (typeof arguments[1] === 'function') {
+		callback = arguments[1];
+		options = {};
+	}
+	Scrape(document_or_path, map, options, callback);
 }; // END: Spider(document_or_path);
 
 exports.SubmitForm = SubmitForm;

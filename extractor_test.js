@@ -8,10 +8,10 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.7h
+ * revision 0.0.8
  */
 
-var TIMEOUT = 50,
+var TIMEOUT = 10,
     util = require('util'),
     path = require('path'),
     url = require('url'),
@@ -38,10 +38,10 @@ console.log("Starting [" + path.basename(process.argv[1]) + "] ... " + new Date(
 // Test FetchPage()
 TESTS.FetchPage = function() {
 	test_expected += 1;// One test in the batch
-	extractor.FetchPage('./README.md', function (err, data, pname) {
+	extractor.FetchPage('./README.md', function (err, data, env) {
 	    assert.ok(! err, "Should not get an error for reading README.md from the application directory.");
 	    assert.ok(data.toString().indexOf("# Overview"), "Should get a data buffer back from README.md");
-	    assert.equal(pname, './README.md', "Should have pname set to README.md");
+	    assert.equal(env.pathname, './README.md', "Should have env.pathname set to README.md");
 	    test_completed += 1;
 	    display("Finished FetchPage tests (" + test_completed + "/" + test_expected + ")");
 	});	
@@ -49,7 +49,7 @@ TESTS.FetchPage = function() {
 
 // Test Scrape()
 TESTS.Scrape = function () {
-	var doc = [
+	var doc1 = [
 		    "<!DOCTYPE html>",
 		    "<html>",
 		    "<head>",
@@ -60,7 +60,7 @@ TESTS.Scrape = function () {
 		    "</body>",
 		    "</html>"
 	    ].join("\n"),
-	    map = { title: 'title', h1: 'h1' },
+	    map1 = { title: 'title', h1: 'h1' },
 	    doc2 = [
 		    "<!DOCTYPE html>",
 		    "<html>",
@@ -76,31 +76,32 @@ TESTS.Scrape = function () {
 	    map2a = { title: '.title > h2', article: '.article' },
 	    map2b = { title: 'div.title > h2', article: '.article'},
 	    doc3 = '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n\n<html xmlns="http://www.w3.org/1999/xhtml">\n\t<head>\n\t\t<meta name="keywords" content="Test, One Two Three" />\n\t\t<title>Test Page</title>\n\t</head>\n\t<body>\n\t\t<div id="site-info">This is the site information</div>\n\t\t<ul>\n\t\t<li><img id="i1" src="one.jpg" alt="dummy image 1" /></li>\n\t\t<li><img id="i2" src="two.jpg" alt="dummy image 2" /></li>\n\t\t<li><img id="i3" src="three.jpg" alt="dummy image 3" /></li>\n\t</ul>\n</body>\n</html>',
-            map3 = {
-		keywords: 'meta[name="keywords"]', 
-		title: "title",
-		image1: "#i1",
-		image2: "#i2",
-		image3: "#i3",
-		images: "img",
-		site_info: "#site-info"
-            };
+		map3 = {
+			keywords: 'meta[name="keywords"]', 
+			title: "title",
+			image1: "#i1",
+			image2: "#i2",
+			image3: "#i3",
+			images: "img",
+			site_info: "#site-info"
+		};
 	
 	test_expected += 1;
-	extractor.Scrape("./test-data/test-1.html", map, function (err, data, pname) {
+	extractor.Scrape("./test-data/test-1.html", map1, function (err, data, env) {
 	    assert.ok(! err, "Should  not get an error. " + err);
-	    assert.equal(pname, "./test-data/test-1.html", "Should have pname set to 'source code'");
+	    assert.equal(env.pathname, "./test-data/test-1.html", "Should have env.pathname set to './test-data/test-1.html'" + util.inspect(env));
 	    assert.ok(typeof data === 'object', "Should have a data object");
 	    assert.equal(data.title.innerHTML, "Test 1", "Title should be 'Test 1': " + JSON.stringify(data));
 	    assert.equal(data.h1.innerHTML, "H1 of Test 1", "h1 should be 'H1 of Test 1': " + JSON.stringify(data));
 	    test_completed += 1;
-	    display("Scrape test, completed processing (" + test_completed + "/" + test_expected + ") : " + pname);
+	    display("Scrape test, completed processing (" + test_completed + "/" + test_expected + ") : " + env.pathname);
 	});
 
 	test_expected += 1;
-	extractor.Scrape(doc, map, function (err, data, pname) {
+	extractor.Scrape(doc1, map1, function (err, data, env) {
 	    assert.ok(! err, "Should  not get an error. " + err);
-	    assert.equal(pname, undefined, "Should have pname set to ''");
+	    assert.ok(env !== undefined, "Should have env defined.");
+	    assert.equal(env.pathname, null, "Should have env.pathname set to ''" + util.inspect(env));
 	    assert.ok(typeof data === 'object', "Should have a data object");
 	    assert.equal(data.title.text, "Test 1", "Title should be 'Test 1': " + JSON.stringify(data));
 	    assert.equal(data.h1.innerHTML, "H1 of Test 1", "h1 should be 'H1 of Test 1': " + JSON.stringify(data));
@@ -109,9 +110,9 @@ TESTS.Scrape = function () {
 	});
 	
 	test_expected += 1;
-	extractor.Scrape(doc2, map2a, function (err, data, pname) {
+	extractor.Scrape(doc2, map2a, function (err, data, env) {
 	    assert.ok(! err, "Should  not get an error. " + err);
-	    assert.equal(pname, undefined, "Should have pname set to ''");
+	    assert.equal(env.pathname, undefined, "Should have env.pathname set to ''");
 	    assert.ok(typeof data === 'object', "Should have a data object");
 	    assert.equal(data.title.innerHTML, "h2 Title", ".title should be 'h2 Title': " + JSON.stringify(data));
 	    assert.equal(data.article.innerHTML, "This is where an article would go.", ".article should be 'This is where an article would go.': " + JSON.stringify(data));
@@ -120,9 +121,9 @@ TESTS.Scrape = function () {
 	});
 
 	test_expected += 1;
-	extractor.Scrape(doc2, map2a, function (err, data, pname) {
+	extractor.Scrape(doc2, map2a, function (err, data, env) {
 	    assert.ok(! err, "Should  not get an error. " + err);
-	    assert.equal(pname, undefined, "Should have pname set to ''");
+	    assert.equal(env.pathname, undefined, "Should have env.pathname set to ''");
 	    assert.ok(typeof data === 'object', "Should have a data object");
 	    assert.equal(data.title.innerHTML, "h2 Title", "div.title should be 'h2 Title': " + JSON.stringify(data));
 	    assert.equal(data.article.innerHTML, "This is where an article would go.", ".article should be 'This is where an article would go.': " + JSON.stringify(data));
@@ -131,7 +132,7 @@ TESTS.Scrape = function () {
 	});
     
 	test_expected += 1;
-	extractor.Scrape(doc3, map3, function (err, data, pname) {
+	extractor.Scrape(doc3, map3, function (err, data, env) {
 		assert.ok(! err, "Should not have an error: " + err);
 		assert.ok(data, "Should have some data.");
 		assert.equal(data.title.innerHTML, "Test Page", "Should have title: " + JSON.stringify(data));
@@ -144,20 +145,23 @@ TESTS.Scrape = function () {
 	});
 };
 
+
 // Tests of Spider()
 TESTS.Spider = function () {
-	test_expected += 4;
-	extractor.Spider("http://its.usc.edu/~rsdoiel/index.html", function (err, data, pname) {
-		assert.ok(! err, "Should not have error: " + err + " from " + pname);
-		assert.ok(data, "Should have data from " + pname);
-		assert.ok(data.anchors !== undefined, "Should have anchors in page (" + pname + ")");
+	test_expected += 1;
+	extractor.Spider("http://its.usc.edu/~rsdoiel/index.html", function (err, data, env) {
+		assert.ok(! err, "Should not have error: " + err + " from " + util.inspect(env));
+	    assert.ok(env !== undefined, "Should have env defined.");
+		assert.ok(data, "Should have data from " + env.pathname);
+		assert.ok(data.anchors !== undefined, "Should have anchors in page (" + env.pathname + ")");
 		assert.ok(data.images, "Should have at least the logo in the page.");
 		assert.ok(data.links, "Should have some links to CSS at least.");
 		test_completed += 1;
-		display("Spider " + pname + " completed processing (" + test_completed + "/" + test_expected + ")");
+		display("Spider " + env.pathname + " completed processing (" + test_completed + "/" + test_expected + ")");
 	});
 
-	extractor.Spider("test-data/test-3a.html", function (err, data, pname) {
+	test_expected += 1;
+	extractor.Spider("test-data/test-3a.html", function (err, data, env) {
 		var expected_result = [ 'http://www.usc.edu/its/webservices/', 
 			'http://nodejs.org', 'http://go-lang.org', 
 			'http://www.google.com/chromeos', 
@@ -170,8 +174,9 @@ TESTS.Spider = function () {
 			'https://github.com/rsdoiel/opt', 'demo', 
 			'https://github.com/rsdoiel', 'cv.html' ], i, pos, anchor;
 		
-		assert.ok(! err, pname + ": " + err);
-		assert.ok(data.anchors !== undefined, "Should have anchors in page (" + pname + ")");
+	    assert.ok(env !== undefined, "Should have env defined.");
+		assert.ok(! err, env.pathname + ": " + err);
+		assert.ok(data.anchors !== undefined, "Should have anchors in page (" + env.pathname + ")");
 		assert.ok(data.images, "Should have at least the logo in the page.");
 		assert.ok(data.links, "Should have some links to CSS at least.");
 		assert.equal(expected_result.length, data.anchors.length, "Should have same lengths: " + expected_result.length + " != " + data.anchors.length);
@@ -189,7 +194,8 @@ TESTS.Spider = function () {
 		display("Spider test-data/test-3a.html completed processing (" + test_completed + "/" + test_expected + ")");
 	});
 
-	extractor.Spider("test-data/test-3b.html", function (err, data, pname) {
+	test_expected += 1;
+	extractor.Spider("test-data/test-3b.html", function (err, data, env) {
 		var expected_result = [ 
 			"http://www.usc.edu/web", 
 			"http://tel.usc.edu", 
@@ -221,8 +227,9 @@ TESTS.Spider = function () {
 			"http://builder.com/Servers/Internet2/?st.bl.fd.ts1.feat.1678", 
 			"index.html" ], i, pos, anchor;
 		
-		assert.ok(! err, pname + ": " + err);
-		assert.ok(data.anchors, "Should have anchors in page (" + pname + ")");
+	    assert.ok(env !== undefined, "Should have env defined.");
+		assert.ok(! err, env.pathname + ": " + err);
+		assert.ok(data.anchors, "Should have anchors in page (" + env.pathname + ")");
 		assert.ok(! data.images, "Should NOT have images.");
 		assert.ok(data.links, "Should have some links to CSS at least.");
 		assert.equal(expected_result.length, data.anchors.length, "Should have same lengths: " + expected_result.length + " != " + data.anchors.length);
@@ -240,21 +247,19 @@ TESTS.Spider = function () {
 		display("Spider test-data/test-3b.html completed processing (" + test_completed + "/" + test_expected + ")");
 	});
 
+	test_expected += 1;
 	extractor.Spider("test-data/test-4.html", function (err, data, pname) {
 		var i;
 		assert.ok(! err, "Should not get an error on test-4.html: " + err);
 		assert.ok(data, "Should get back data for test-4.html");
 		assert.ok(data.anchors !== undefined, "Should have anchors in page (" + pname + ")");
-		assert.ok(data.anchors.length > 10000, "Should get more then 10k anchors back.");
-		//display("DEBUG data: " + util.inspect(data.anchors));// DEBUG
+		assert.ok(data.anchors.length > 1000, "Should get more then 10k anchors back.");
 		for (i = 0; i < data.anchors.length; i += 1) {
 			assert.ok(data.anchors[i].href, "Should get an href for " + i + "th anchor");
-			console.log("DEBUG href: " + data.anchors[i].href);
 		}
 		test_completed += 1;
 		display("Spider test-data/test-4.html completed processing (" + test_completed + "/" + test_expected + ")");
 	});
-
 };
 
 // Tests of SubmitForm()
@@ -262,26 +267,23 @@ TESTS.SubmitForm = function () {
 	// http GET
 	test_expected += 1;
 	(function () {
-		var hostname, pathname, uri, form_data, form_options = { method:'GET' };
+		var hostname, pathname, uri, 
+			uri_parts = url.parse("http://blog.nodejs.org/"), 
+			uri = url.format(uri_parts), form_data, form_options = { method:'GET' };
 
-		form_data = { s:'npm', searchsubmit:'Search' };
-		hostname = 'blog.nodejs.org';
-		pathname = '';
-		uri = url.format({ protocol: 'http', hostname: hostname, pathname: pathname})
+		form_data = { s: 'npm' };
 		display("Running SubmitForm test " + uri);
-		extractor.SubmitForm(uri, form_data, function (err, data, options) {
+		extractor.SubmitForm(uri, form_data, form_options, function (err, data, env) {
 			assert.ok(! err, uri + ": " + err);
-			assert.ok(data, hostname + " should get some data back.");
-			assert.ok(data.match(/<\/html>/), hostname + " should get the end of the html page response.");
-			assert.equal(options.protocol, 'http:', hostname + " should have an http: for protocol.");
-			assert.equal(options.host, hostname, hostname + "should have host blog.nodejs.org.");
-			assert.equal(options.port, 80, hostname + " should have port 80");
-			assert.equal(options.path, ('/' + pathname + '?' + querystring.encode(form_data)), uri + " should have path " + pathname + ": " + options.path);
-			assert.equal(options.method, 'GET', hostname + " should have path GET");
-			assert.equal(options.timeout, 30000, hostname + " should have 30000 for timeout.");		
+			assert.ok(data, uri + " should get some data back.");
+			assert.ok(data.match(/<\/html>/), uri + " should get the end of the html page response.");
+			assert.equal(env.options.protocol, 'http:', uri + " should have an http: for protocol.");
+			assert.equal(env.options.host, uri_parts.host, uri + "should have host " + uri_parts.host + ". " + util.inspect(env));
+			assert.equal(env.options.method, 'GET', uri + " should have path GET " + util.inspect(env));
+			assert.equal(env.options.timeout, 30000, uri + " should have 30000 for timeout. " + util.inspect(env));		
 			test_completed += 1;
 			display("SubmitForm " + uri + " completed processing (" + test_completed + "/" + test_expected + ")");
-		}, form_options);
+		});
 	}());
 
 	// https GET
@@ -295,7 +297,8 @@ TESTS.SubmitForm = function () {
 		pathname = 'search';
 		uri = url.format({ protocol: 'https', hostname: hostname, pathname: pathname});
 		display("Running SubmitForm test " + uri);
-		extractor.SubmitForm(uri, form_data, function (err, data, options) {
+		extractor.SubmitForm(uri, form_data, form_options, function (err, data, env) {
+			var options = env.options;
 			assert.ok(! err, uri + ": " + err);
 			assert.ok(data, hostname + " should get some data back.");
 			assert.ok(data.match(/<\/html>/), hostname + " should get the end of the html page response.");
@@ -307,12 +310,8 @@ TESTS.SubmitForm = function () {
 			assert.equal(options.timeout, 30000, hostname + " should have 30000 for timeout.");		
 			test_completed += 1;
 			display("SubmitForm " + uri + " completed processing (" + test_completed + "/" + test_expected + ")");
-		}, form_options);
+		});
 	}());
-	
-	// http POST
-	// https POST	
-	// FIXME: Need to come up with public sites I can test against
 };
 
 // Run the tests and keep track of what passed
