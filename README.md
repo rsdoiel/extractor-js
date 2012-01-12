@@ -7,9 +7,9 @@ revision 0.0.8
 
 Periodically I wind up writing scripts to screen scrape or spider sites.  Node  is really nice for this. extractor-js is a utility module for these types of script.
 
-## Three methods
+## Four methods
 
-extractor has three methods -
+extractor has four methods -
 
 * `FetchPage` - get a page from the local file system or via http/https
 * `Scrape` - A combination of FetchPage(), Cleaner(), and Transformer() which fetches the content, parses it via 
@@ -34,10 +34,10 @@ selector = {
     };
 
 pages.forEach(function(page) {
-    extractor.Scrape(page, selector, function (err, data, page_name) {
+    extractor.Scrape(page, selector, function (err, data, env) {
         if (err) throw err;
 
-        console.log("Processed " + page_name);
+        console.log("Processed " + env.pathname);
         console.log("Page record: " + JSON.stringify(data));
     });
 });
@@ -54,12 +54,12 @@ In this example we spider the homepage of the NodeJS website and list of the lin
 ```javascript
 var extractor = require('extractor');
 
-extractor.Spider('http://nodejs.org', function(err, data, url) {
+extractor.Spider('http://nodejs.org', function(err, data, env) {
     var i;
     if (err) {
         console.error("ERROR: " + err);
     }
-    console.log("from -> "+ url);
+    console.log("from -> "+ env.pathname);
     console.log("data -> " + JSON.stringify(data));
     for(i = 0; i < data.links.length; i += 1) {
         console.log("Link " + i + ": " + data.links[i].href);
