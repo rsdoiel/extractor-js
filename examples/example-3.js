@@ -106,9 +106,9 @@ if (cluster.isMaster) {
 } else { // End of Parent process
 	process.on('message', function(m) {
 		console.log('CHILD ' + process.pid +  ' spider:', m.url);
-		extractor.Spider(m.url, function(err, data, url) {
+		extractor.Spider(m.url, function(err, data, env) {
 			var i, base_path = path.dirname(url), cut_pos = base_path.length, new_url,
-				urls = [];
+				urls = [], url = env.pathmame;
 		
 			if (err) {
 				console.error("ERROR: " + url + ': ' + err);
