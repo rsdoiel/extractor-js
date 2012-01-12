@@ -63,18 +63,8 @@ var SubmitForm = function (action, form_data, options, callback) {
 	// Process form request
 	if (options.protocol === 'http:') {
 		protocol_method = http;
-		/*
-		if (options.port === undefined) {
-			options.port = 80;
-		}
-		*/
 	} else if (options.protocol === 'https:') {
 		protocol_method = https;
-		/*
-		if (options.port === undefined) {
-			options.port = 443;
-		}
-		*/
 	} else {
 		return callback("ERROR: protocol not supported", null, {options:options});
 	}
