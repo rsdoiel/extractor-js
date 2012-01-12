@@ -15,8 +15,10 @@ robot.txt processing at this time.
 
 Create a spider that will crawl http://example.com.
 
+```javascript
     var util = require("util"),
-        ClusteredSpider = require("extractor").ClusteredSpider({ url: "http://example.com" });
+        extractor = require('extractor'),
+        ClusteredSpider = extractor.ClusteredSpider({ url: "http://example.com" });
 
     ClusteredSpider.on("message", function (m) {
       if (m.error) {
@@ -35,4 +37,4 @@ Create a spider that will crawl http://example.com.
             console.log(util.inspect(m.data));
         }
     });
-    
+```
