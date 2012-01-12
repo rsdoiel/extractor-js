@@ -2,10 +2,10 @@ var extractor = require('../extractor');
 
 var map = {title:'title', intro : '#introduction' };
 
-extractor.Scrape('http://nodejs.org', map, function(err, data, url) {
+extractor.Scrape('http://nodejs.org', map, function(err, data, env) {
 	if (err) {
 		console.error("ERROR: " + err);
 	}
-	console.log("from -> "+ url);
+	console.log("from -> "+ env.pathname);
 	console.log("data -> " + JSON.stringify(data));
 });
