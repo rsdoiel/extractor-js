@@ -316,8 +316,8 @@ runChild = function (options) {
 
 	process.on('message', function (m) {
 		console.log('CHILD (' + process.pid +  ') spidering:', m.url);
-		extractor.Spider(m.url, function (err, data, cur_url, res) {
-			var i, new_url, urls = [], base_parts, base_path;
+		extractor.Spider(m.url, function (err, data, env) {
+			var i, new_url, urls = [], base_parts, base_path, cur_url = env.pathname, res = env.response;
 
 			base_parts = url.parse(cur_url);
 			base_path = base_parts.path;
