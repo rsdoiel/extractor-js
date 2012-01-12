@@ -70,7 +70,10 @@ var SubmitForm = function (action, form_data, options, callback) {
 	}
 
 	req = protocol_method.request(options, function(res) {
-		var buf = [];
+		var buf = [], env = { options: options};
+		if (options.response === true) {
+			env.response = res;
+		}
 		res.on('data', function(data) {
 			if (data) {
 				buf.push(data);
@@ -79,28 +82,28 @@ var SubmitForm = function (action, form_data, options, callback) {
 		res.on('close', function() {
 			if (timer_id) { clearTimeout(timer_id); }
 			if (buf.length > 0) {
-				return callback(null, buf.join(""), {options:options});
+				return callback(null, buf.join(""), env);
 			}
 			else {
-				return callback('Stream closed, No data returned', null, {options:options});
+				return callback('Stream closed, No data returned', null, env);
 			}
 		});
 		res.on('end', function() {
 			if (timer_id) { clearTimeout(timer_id); }
 			if (buf.length > 0) {
-				return callback(null, buf.join(""), {options:options});
+				return callback(null, buf.join(""), env);
 			}
 			else {
-				return callback('No data returned', null, {options: options});
+				return callback('No data returned', null, env);
 			}
 		});
 		res.on('error', function(err) {
 			if (timer_id) { clearTimeout(timer_id); }
 			if (buf.length > 0) {
-				return callback(err, buf.join(""), {options: options});
+				return callback(err, buf.join(""), env);
 			}
 			else {
-				return callback(err, null, {options: options});
+				return callback(err, null, env);
 			}
 		});
 	});
@@ -131,7 +134,7 @@ var SubmitForm = function (action, form_data, options, callback) {
  */
 var FetchPage = function(pathname, options, callback) {
 	var defaults = { response: false, timeout: 30000, method: 'GET' }, 
-		pg, parts, timer_id, protocol_method = http, finishUp;
+		pg, parts, timer_id, protocol_method = http;
 
 	if (typeof arguments[1] === 'function') {
 		callback = arguments[1];
@@ -150,14 +153,14 @@ var FetchPage = function(pathname, options, callback) {
 	}
 
 	// local func to handle passing back the data and run the callback
-	finishUp = function (err, buf, res) {
+	var finishUp = function (err, buf, res) {
 		var env = {};
 		// Setup the enviroment to return to the callback
 		env.pathname = pathname;
 		env.options = options;
 
 		if (timer_id) { clearTimeout(timer_id); }
-		if (options.response === true && res) {
+		if (options.response === true && res !== undefined) {
 			env.response = res;
 		}
 		if (buf === undefined || buf === null) {
@@ -192,16 +195,9 @@ var FetchPage = function(pathname, options, callback) {
 		switch (options.protocol) {
 		case 'http:':
 			protocol_method = http;
-			
-			if (options.port === undefined) {
-				options.port = 80;
-			}
 			break;
 		case 'https:':
 			protocol_method = https;
-			if (options.port === undefined) {
-				options.port = 443;
-			}
 			break;
 		default:
 			finishUp("ERROR: unsupported protocol for " + pathname, null);
@@ -286,12 +282,12 @@ var Scrape = function(document_or_path, selectors, options, callback) {
 	var defaults = {
 		"cleaner": null,
 		"transformer": null,
-		"response" : false,
+		"response" : true, // was false,
         // FIXME, adjust this to better support jsDom 2.10
 		"features": {
-			"FetchExternalResources": true, // was false
+			"FetchExternalResources": ['script', 'img', 'css', 'frame', 'link'], // was false
 			"ProcessExternalResources": true, // was false
-			"MutationEvents": true, // was false
+			"MutationEvents": false, // was false
 			"QuerySelector": ["2.0"]
 		},
 		"src": []
@@ -389,14 +385,16 @@ var Scrape = function(document_or_path, selectors, options, callback) {
 					});
 
 					window.close();
+					/*
 					if (options.response === true && res !== undefined) {
 						env.response = res;
 					}
+					*/
 					return callback(null, output, env);
 				}
 			});
 		} catch (err) {
-			return callback("DOM processing error: " + err, null, env);
+			return callback(err, null, env);
 		}
 	}; // END ScrapeIt(src, env)
 

@@ -88,7 +88,7 @@ TESTS.Scrape = function () {
 	
 	test_expected += 1;
 	extractor.Scrape("./test-data/test-1.html", map1, function (err, data, env) {
-	    assert.ok(! err, "Should  not get an error. " + err);
+	    assert.ok(! err, "Should not get an error. " + err + ", " + util.inspect(env));
 	    assert.equal(env.pathname, "./test-data/test-1.html", "Should have env.pathname set to './test-data/test-1.html'" + util.inspect(env));
 	    assert.ok(typeof data === 'object', "Should have a data object");
 	    assert.equal(data.title.innerHTML, "Test 1", "Title should be 'Test 1': " + JSON.stringify(data));
@@ -99,7 +99,7 @@ TESTS.Scrape = function () {
 
 	test_expected += 1;
 	extractor.Scrape(doc1, map1, function (err, data, env) {
-	    assert.ok(! err, "Should  not get an error. " + err);
+	    assert.ok(! err, "Should not get an error. " + err + ", " + util.inspect(env));
 	    assert.ok(env !== undefined, "Should have env defined.");
 	    assert.equal(env.pathname, null, "Should have env.pathname set to ''" + util.inspect(env));
 	    assert.ok(typeof data === 'object', "Should have a data object");
@@ -262,6 +262,7 @@ TESTS.Spider = function () {
 	});
 };
 
+
 // Tests of SubmitForm()
 TESTS.SubmitForm = function () {
 	// http GET
@@ -313,6 +314,7 @@ TESTS.SubmitForm = function () {
 		});
 	}());
 };
+
 
 // Run the tests and keep track of what passed
 for (ky in TESTS) {
