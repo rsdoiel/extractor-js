@@ -231,7 +231,7 @@ var FetchPage = function(pathname, callback, options) {
 				finishUp('No data returned', buf, pathname, res);
 			});
 			res.on('error', function(err) {
-				finshUp(res, err, buf, pathname);
+				finishUp(res, err, buf, pathname);
 			});
 		}).on("error", function(err) {
 			finishUp(err, null, pathname, null);
@@ -288,10 +288,11 @@ var Scrape = function(document_or_path, selectors, callback, options) {
 		"cleaner": null,
 		"transformer": null,
 		"response" : false,
+        // FIXME, adjust this to better support jsDom 2.10
 		"features": {
-			"FetchExternalResources": false,
-			"ProcessExternalResources": false,
-			"MutationEvents": false,
+			"FetchExternalResources": true, // was false
+			"ProcessExternalResources": true, // was false
+			"MutationEvents": true, // was false
 			"QuerySelector": ["2.0"]
 		},
 		"src": []
@@ -354,7 +355,7 @@ var Scrape = function(document_or_path, selectors, callback, options) {
 				src : options.src,
 				features: options.features,
 				done : function(err, window) {
-					var ky = "", output = {}, val;
+					var output = {}, val;
 					if (err) {
 						return callback(err, null, pname);
 					}
@@ -371,6 +372,8 @@ var Scrape = function(document_or_path, selectors, callback, options) {
 						}
 
 						if (typeof options.transformer === 'function') {
+                            // FIXME: this seems to have problems output[ky] is an array
+                            // Figure out a more consistant way to handle this
 							output[ky] = options.transformer(ky, output[ky]);
 						}
 					});
