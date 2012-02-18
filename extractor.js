@@ -269,17 +269,21 @@ var Scrape = function(document_or_path, selectors, options, callback) {
 						return callback(err, null, env);
 					}
 					Object.keys(selectors).forEach(function (ky) {
+						var elems = [];
 						val = window.document.querySelectorAll(selectors[ky]);
-						output[ky] = [];
 						Array.prototype.forEach.call(val, function (elem) {
-							output[ky].push(makeItem(elem));
+							elems.push(makeItem(elem));
 						});
 						if (typeof options.transformer === 'function') {
 							// NOTICE: options[ky] is an array when passed
 							// to the transformer. Probably a good idea to
 							// return an array too though you could return
 							// something else.
-							output[ky] = options.transformer(ky, output[ky]);
+							elems = options.transformer(ky, elems);
+						}
+						
+						if (elems.length > 0) {
+							output[ky] = elems;
 						}
 					});
 
@@ -329,7 +333,6 @@ var Spider = function (document_or_path, options, callback) {
 	Scrape(document_or_path, map, options, callback);
 }; // END: Spider(document_or_path);
 
-exports.SubmitForm = SubmitForm;
 exports.FetchPage = FetchPage;
 exports.Scrape = Scrape;
 exports.Spider = Spider;

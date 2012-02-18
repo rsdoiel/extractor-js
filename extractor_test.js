@@ -91,8 +91,8 @@ TESTS.Scrape = function () {
 	    assert.ok(! err, "Should not get an error. " + err + ", " + util.inspect(env));
 	    assert.equal(env.pathname, "./test-data/test-1.html", "Should have env.pathname set to './test-data/test-1.html'" + util.inspect(env));
 	    assert.ok(typeof data === 'object', "Should have a data object");
-	    assert.equal(data.title.innerHTML, "Test 1", "Title should be 'Test 1': " + JSON.stringify(data));
-	    assert.equal(data.h1.innerHTML, "H1 of Test 1", "h1 should be 'H1 of Test 1': " + JSON.stringify(data));
+	    assert.equal(data.title[0].innerHTML, "Test 1", "Title should be 'Test 1': " + JSON.stringify(data));
+	    assert.equal(data.h1[0].innerHTML, "H1 of Test 1", "h1 should be 'H1 of Test 1': " + JSON.stringify(data));
 	    test_completed += 1;
 	    display("Scrape test, completed processing (" + test_completed + "/" + test_expected + ") : " + env.pathname);
 	});
@@ -103,19 +103,8 @@ TESTS.Scrape = function () {
 	    assert.ok(env !== undefined, "Should have env defined.");
 	    assert.equal(env.pathname, null, "Should have env.pathname set to ''" + util.inspect(env));
 	    assert.ok(typeof data === 'object', "Should have a data object");
-	    assert.equal(data.title.text, "Test 1", "Title should be 'Test 1': " + JSON.stringify(data));
-	    assert.equal(data.h1.innerHTML, "H1 of Test 1", "h1 should be 'H1 of Test 1': " + JSON.stringify(data));
-	    test_completed += 1;
-	    display("Scrape test, completed processing (" + test_completed + "/" + test_expected + ") : markup");
-	});
-	
-	test_expected += 1;
-	extractor.Scrape(doc2, map2a, function (err, data, env) {
-	    assert.ok(! err, "Should  not get an error. " + err);
-	    assert.equal(env.pathname, undefined, "Should have env.pathname set to ''");
-	    assert.ok(typeof data === 'object', "Should have a data object");
-	    assert.equal(data.title.innerHTML, "h2 Title", ".title should be 'h2 Title': " + JSON.stringify(data));
-	    assert.equal(data.article.innerHTML, "This is where an article would go.", ".article should be 'This is where an article would go.': " + JSON.stringify(data));
+	    assert.equal(data.title[0].text, "Test 1", "Title should be 'Test 1': " + JSON.stringify(data));
+	    assert.equal(data.h1[0].innerHTML, "H1 of Test 1", "h1 should be 'H1 of Test 1': " + JSON.stringify(data));
 	    test_completed += 1;
 	    display("Scrape test, completed processing (" + test_completed + "/" + test_expected + ") : markup");
 	});
@@ -125,8 +114,19 @@ TESTS.Scrape = function () {
 	    assert.ok(! err, "Should  not get an error. " + err);
 	    assert.equal(env.pathname, undefined, "Should have env.pathname set to ''");
 	    assert.ok(typeof data === 'object', "Should have a data object");
-	    assert.equal(data.title.innerHTML, "h2 Title", "div.title should be 'h2 Title': " + JSON.stringify(data));
-	    assert.equal(data.article.innerHTML, "This is where an article would go.", ".article should be 'This is where an article would go.': " + JSON.stringify(data));
+	    assert.equal(data.title[0].innerHTML, "h2 Title", ".title should be 'h2 Title': " + JSON.stringify(data));
+	    assert.equal(data.article[0].innerHTML, "This is where an article would go.", ".article should be 'This is where an article would go.': " + JSON.stringify(data));
+	    test_completed += 1;
+	    display("Scrape test, completed processing (" + test_completed + "/" + test_expected + ") : markup");
+	});
+
+	test_expected += 1;
+	extractor.Scrape(doc2, map2a, function (err, data, env) {
+	    assert.ok(! err, "Should  not get an error. " + err);
+	    assert.equal(env.pathname, undefined, "Should have env.pathname set to ''");
+	    assert.ok(typeof data === 'object', "Should have a data object");
+	    assert.equal(data.title[0].innerHTML, "h2 Title", "div.title should be 'h2 Title': " + JSON.stringify(data));
+	    assert.equal(data.article[0].innerHTML, "This is where an article would go.", ".article should be 'This is where an article would go.': " + JSON.stringify(data));
 	    test_completed += 1;
 	    display("Scrape test, completed processing (" + test_completed + "/" + test_expected + ") : markup");
 	});
@@ -135,10 +135,10 @@ TESTS.Scrape = function () {
 	extractor.Scrape(doc3, map3, function (err, data, env) {
 		assert.ok(! err, "Should not have an error: " + err);
 		assert.ok(data, "Should have some data.");
-		assert.equal(data.title.innerHTML, "Test Page", "Should have title: " + JSON.stringify(data));
-		assert.equal(data.keywords.content, "Test, One Two Three", "Should have keywords: Test, One Two Three -> " + JSON.stringify(data));
-		assert.equal(data.image1.src, "one.jpg", "Should have image one.jpg");
-		assert.equal(data.image1.alt, "dummy image 1", "Should have alt text for image1");
+		assert.equal(data.title[0].innerHTML, "Test Page", "Should have title: " + JSON.stringify(data));
+		assert.equal(data.keywords[0].content, "Test, One Two Three", "Should have keywords: Test, One Two Three -> " + JSON.stringify(data));
+		assert.equal(data.image1[0].src, "one.jpg", "Should have image one.jpg");
+		assert.equal(data.image1[0].alt, "dummy image 1", "Should have alt text for image1");
 		assert.equal(data.images[0].src, "one.jpg", "Should have image one in the first position of the array.");
 		test_completed += 1;
 		display("Scrape test, completed processing (" + test_completed + "/" + test_expected + ") : markup");
@@ -233,7 +233,7 @@ TESTS.Spider = function () {
 	    assert.ok(env !== undefined, "Should have env defined.");
 		assert.ok(! err, env.pathname + ": " + err);
 		assert.ok(data.anchors, "Should have anchors in page (" + env.pathname + ")");
-		assert.ok(! data.images, "Should NOT have images.");
+		assert.ok(! data.images, "Should NOT have images. " + JSON.stringify(data.images));
 		assert.ok(data.links, "Should have some links to CSS at least.");
 		assert.equal(expected_result.length, data.anchors.length, "Should have same lengths: " + expected_result.length + " != " + data.anchors.length);
 
