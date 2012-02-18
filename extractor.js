@@ -11,14 +11,13 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.9b
+ * revision 0.0.9c
  */
 var	url = require('url'),
 	fs = require('fs'),
 	path = require('path'),
 	http = require('http'),
 	https = require('https'),
-	querystring = require('querystring'),
 	jsdom = require('jsdom').jsdom;
 
 //var	util = require('util');// DEBUG
@@ -289,12 +288,7 @@ var Scrape = function(document_or_path, selectors, options, callback) {
 					});
 
 					window.close();
- 					/*
-					if (options.response === true && res !== undefined) {
-						env.response = res;
-					}
-					*/
-					return callback(null, output, env);
+                    return callback(null, output, env);
 				}
 			});
 		} catch (err) {
@@ -337,3 +331,4 @@ var Spider = function (document_or_path, options, callback) {
 exports.FetchPage = FetchPage;
 exports.Scrape = Scrape;
 exports.Spider = Spider;
+

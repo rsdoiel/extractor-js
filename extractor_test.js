@@ -8,14 +8,12 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.9b
+ * revision 0.0.9c
  */
 
 var TIMEOUT = 10,
     util = require('util'),
     path = require('path'),
-    url = require('url'),
-    querystring = require('querystring'),
     assert = require('assert'),
     extractor = require('./extractor'),
     test_expected = 0,
@@ -74,7 +72,7 @@ TESTS.Scrape = function () {
 		    "</html>"
 	    ].join("\n"),
 	    map2a = { title: '.title > h2', article: '.article' },
-	    map2b = { title: 'div.title > h2', article: '.article'},
+	    //map2b = { title: 'div.title > h2', article: '.article'},
 	    doc3 = '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n\n<html xmlns="http://www.w3.org/1999/xhtml">\n\t<head>\n\t\t<meta name="keywords" content="Test, One Two Three" />\n\t\t<title>Test Page</title>\n\t</head>\n\t<body>\n\t\t<div id="site-info">This is the site information</div>\n\t\t<ul>\n\t\t<li><img id="i1" src="one.jpg" alt="dummy image 1" /></li>\n\t\t<li><img id="i2" src="two.jpg" alt="dummy image 2" /></li>\n\t\t<li><img id="i3" src="three.jpg" alt="dummy image 3" /></li>\n\t</ul>\n</body>\n</html>',
 		map3 = {
 			keywords: 'meta[name="keywords"]', 
@@ -135,6 +133,7 @@ TESTS.Scrape = function () {
 	extractor.Scrape(doc3, map3, function (err, data, env) {
 		assert.ok(! err, "Should not have an error: " + err);
 		assert.ok(data, "Should have some data.");
+        assert.ok(env.modified === undefined, "modified should not be set since the file wasn't retrieved remotely.");
 		assert.equal(data.title[0].innerHTML, "Test Page", "Should have title: " + JSON.stringify(data));
 		assert.equal(data.keywords[0].content, "Test, One Two Three", "Should have keywords: Test, One Two Three -> " + JSON.stringify(data));
 		assert.equal(data.image1[0].src, "one.jpg", "Should have image one.jpg");
