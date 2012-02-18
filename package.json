@@ -1,6 +1,6 @@
 {
 	"name" : "extractor",
-	"version" : "0.0.9",
+	"version" : "0.0.9b",
 	"description" : "A small utility library for retrieving and scraping web content. It targets scraping content with a unique attribute id, class or tag.",
 	"main" : "./extractor.js",
 	"repository" : {

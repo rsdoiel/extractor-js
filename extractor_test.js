@@ -8,7 +8,7 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.9
+ * revision 0.0.9b
  */
 
 var TIMEOUT = 10,
