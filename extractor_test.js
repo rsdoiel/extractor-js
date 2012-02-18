@@ -148,12 +148,12 @@ TESTS.Scrape = function () {
 
 // Tests of Spider()
 TESTS.Spider = function () {
-	/*
-	// Test fetching my personal page at usc.edu
+	// Test fetching my personal page at usc.edu, response false
 	test_expected += 1;
-	extractor.Spider("http://its.usc.edu/~rsdoiel/index.html", function (err, data, env) {
+	extractor.Spider("http://its.usc.edu/~rsdoiel/index.html", { response:false },  function (err, data, env) {
 		assert.ok(! err, "Should not have error: " + err + " from " + util.inspect(env));
 		assert.ok(env !== undefined, "Should have env defined.");
+		assert.equal(env.options.response, false, "Should have timeout of 1. " + util.inspect(env.options));
 		assert.ok(data, "Should have data from " + env.pathname);
 		assert.ok(data.anchors !== undefined, "Should have anchors in page (" + env.pathname + ")");
 		assert.ok(data.images, "Should have at least the logo in the page.");
@@ -161,7 +161,19 @@ TESTS.Spider = function () {
 		test_completed += 1;
 		display("Spider " + env.pathname + " completed processing (" + test_completed + "/" + test_expected + ")");
 	});
-	*/
+	// Fetch my personal cv, response true
+	test_expected += 1;
+	extractor.Spider("http://its.usc.edu/~rsdoiel/cv.html",{ response: true },  function (err, data, env) {
+		assert.ok(! err, "Should not have error: " + err + " from " + util.inspect(env));
+		assert.equal(env.options.response, true, "Should have timeout of 1. " + util.inspect(env.options));
+		assert.ok(env !== undefined, "Should have env defined.");
+		assert.ok(data, "Should have data from " + env.pathname);
+		assert.ok(data.anchors !== undefined, "Should have anchors in page (" + env.pathname + ")");
+		assert.ok(! data.images, "Should NOT have a logo on my cv. " + util.inspect(data.images));
+		assert.ok(data.links, "Should have some links to CSS at least.");
+		test_completed += 1;
+		display("Spider " + env.pathname + " completed processing (" + test_completed + "/" + test_expected + ")");
+	});
 
 	test_expected += 1;
 	extractor.Spider("test-data/test-3a.html", function (err, data, env) {
@@ -177,7 +189,7 @@ TESTS.Spider = function () {
 			'https://github.com/rsdoiel/opt', 'demo', 
 			'https://github.com/rsdoiel', 'cv.html' ], i, pos, anchor;
 		
-	    assert.ok(env !== undefined, "Should have env defined.");
+		assert.ok(env !== undefined, "Should have env defined.");
 		assert.ok(! err, env.pathname + ": " + err);
 		assert.ok(data.anchors !== undefined, "Should have anchors in page (" + env.pathname + ")");
 		assert.ok(data.images, "Should have at least the logo in the page.");
@@ -250,6 +262,9 @@ TESTS.Spider = function () {
 		display("Spider test-data/test-3b.html completed processing (" + test_completed + "/" + test_expected + ")");
 	});
 
+	// NOTE: This is a large file to parse (200k) with over 1k links
+	// Give it a higher timeout.
+	display("Spidering a file with over 1K links. This is slow ...");
 	test_expected += 1;
 	extractor.Spider("test-data/test-4.html", function (err, data, pname) {
 		var i;

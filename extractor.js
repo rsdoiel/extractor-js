@@ -29,21 +29,21 @@ var	url = require('url'),
  * FetchPage - read a file from the local disc or via http/https
  * @param pathname - a disc path or url to the document you want to
  * read in and process with the callback.
- * @param options - a set of properties to modify FetchPage behavior (e.g. optional.timeout  
- * defaults to 30000 milliseconds).
+ * @param options - a set of properties to modify FetchPage behavior (e.g. optional.response  
+ * defaults to false).
  * @param callback - the callback you want to run when you have the file. The 
  * callback will be passed an error, data (buffer stream), and environment (e.g. the path where it came from).
  */
 var FetchPage = function(pathname, options, callback) {
-	var defaults = { response: false, timeout: 30000, method: 'GET' }, 
-		pg, parts, timer_id, protocol_method = http;
+	var defaults = { response: false, method: 'GET' }, 
+		pg, parts, protocol_method = http;
 
 	if (typeof arguments[1] === 'function') {
 		callback = arguments[1];
 		options = {};
 	}
 
-	// handle timeout
+	// process options
 	if (options === undefined) {
 		options = defaults;
 	} else {
@@ -60,10 +60,12 @@ var FetchPage = function(pathname, options, callback) {
 		// Setup the enviroment to return to the callback
 		env.pathname = pathname;
 		env.options = options;
-
-		if (timer_id) { clearTimeout(timer_id); }
+		
 		if (options.response === true && res !== undefined) {
 			env.response = res;
+			if (res.headers['last-modified'] !== undefined) {
+				env.modified = res.headers['last-modified'];
+			}
 		}
 		if (buf === undefined || buf === null) {
 			return callback(err, null, env);
@@ -78,6 +80,7 @@ var FetchPage = function(pathname, options, callback) {
 			return callback(err, null, env);
 		}
 	};
+	
 
 	// Are we looking at the file system or a remote URL?
 	parts = url.parse(pathname);
@@ -94,6 +97,7 @@ var FetchPage = function(pathname, options, callback) {
 			finishUp(err, data);
 		});
 	} else {
+
 		switch (options.protocol) {
 		case 'http:':
 			protocol_method = http;
@@ -108,6 +112,7 @@ var FetchPage = function(pathname, options, callback) {
 		
 		pg = protocol_method.get(options, function(res) {
 			var buf = [];
+	
 			res.on('data', function(data) {
 				if (data) {
 					buf.push(data);
@@ -125,10 +130,6 @@ var FetchPage = function(pathname, options, callback) {
 		}).on("error", function(err) {
 			finishUp(err, null);
 		});
-
-		timer_id = setTimeout(function () {
-			finishUp("ERROR: timeout " + pathname, null);
-		}, options.timeout);
 	}
 }; /* END: FetchPage(pathname, options, callback) */
 

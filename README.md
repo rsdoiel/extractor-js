@@ -37,6 +37,7 @@ pages.forEach(function(page) {
         if (err) throw err;
 
         console.log("Processed " + env.pathname);
+        console.log("Last modified " + env.modified);
         console.log("Page record: " + JSON.stringify(data));
     });
 });
