@@ -12,6 +12,7 @@
  */
 
 var TIMEOUT = 10,
+	fs = require('fs'),
     util = require('util'),
     path = require('path'),
     assert = require('assert'),
