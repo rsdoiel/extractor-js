@@ -71,7 +71,7 @@ var FetchPage = function(pathname, options, callback) {
 		if (buf === undefined || buf === null) {
 			return callback(err, null, env);
 		} else {
-			return callback(null, buf.toString(), env);
+			return callback(null, buf, env);
 		}
 	};
 	
@@ -116,23 +116,23 @@ var FetchPage = function(pathname, options, callback) {
 			});
 			res.on('close', function() {
 				if (buf.length == 0) {
-					 finishUp('Stream closed, No data returned', null, res);
+					finishUp('Stream closed, No data returned', null, res);
 				} else {
-					finishUp(null, new Buffer(buf.join(''), 'binary'), res);
+					finishUp(null, buf.join(''), res);
 				}
 			});
 			res.on('end', function() {
 				if (buf.length == 0) {
-					 finishUp('No data returned', null, res);
+					finishUp('No data returned', null, res);
 				} else {
-					finishUp(null, new Buffer(buf.join(''), 'binary'), res);
+					finishUp(null, buf.join(''), res);
 				}
 			});
 			res.on('error', function(err) {
 				if (buf.length == 0) {
-					finishUp(err, new Buffer(buf.join(''), 'binary'), res);
-				} else {
 					finishUp(err, null, res);
+				} else {
+					finishUp(err, buf.join(''), res);
 				}
 			});
 		}).on("error", function(err) {
@@ -265,10 +265,11 @@ var Scrape = function(document_or_path, selectors, options, callback) {
 	};// END: makeItem(elem)
     
 	var ScrapeIt = function(src, env) {
-		var buf = new Buffer(src, 'binary');
-		// Fix encoding issues before going to jsdom.
-        if (buf.toString().match(/charset=ISO-8859-1/gim) !== null) {
-        	src = iso8859_1_to_utf8.convert(buf).toString();
+		//var buf = new Buffer(src, 'binary');
+		// Fix encoding issues before going to jsdom, 
+		// FIXME: allow for converting different incoding besides iso8859-1.
+        if (String(src).match(/charset=ISO-8859-1/gim) !== null) {
+        	src = iso8859_1_to_utf8.convert(src).toString();
         }
        
         if (typeof options.cleaner === 'function') {
