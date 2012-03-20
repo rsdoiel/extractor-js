@@ -13,14 +13,16 @@
  * 
  * revision 0.0.9c
  */
+//var	util = require('util');// DEBUG
 var	url = require('url'),
 	fs = require('fs'),
 	path = require('path'),
 	http = require('http'),
 	https = require('https'),
+	iconv = require('iconv'),
+	querystring = require('querystring'),
 	jsdom = require('jsdom').jsdom;
 
-//var	util = require('util');// DEBUG
 
 
 
@@ -56,7 +58,7 @@ var FetchPage = function(pathname, options, callback) {
 	// local func to handle passing back the data and run the callback
 	var finishUp = function (err, buf, res) {
 		var env = {};
-		// Setup the enviroment to return to the callback
+		// Setup the environment to return to the callback
 		env.pathname = pathname;
 		env.options = options;
 		
@@ -68,15 +70,8 @@ var FetchPage = function(pathname, options, callback) {
 		}
 		if (buf === undefined || buf === null) {
 			return callback(err, null, env);
-		}
-		else if (buf.join !== undefined && buf.length) {
-			return callback(null, buf.join(""), env);
-		}
-		else if (buf.length > 0) {
+		} else {
 			return callback(null, buf.toString(), env);
-		}
-		else {
-			return callback(err, null, env);
 		}
 	};
 	
@@ -109,6 +104,8 @@ var FetchPage = function(pathname, options, callback) {
 			break;
 		}
 		
+		// Force encoding to binary in order to safely handle non-utf8 pages.
+		options.encoding = 'binary';
 		pg = protocol_method.get(options, function(res) {
 			var buf = [];
 	
@@ -118,13 +115,25 @@ var FetchPage = function(pathname, options, callback) {
 				}
 			});
 			res.on('close', function() {
-				finishUp('Stream closed, No data returned', buf, res);
+				if (buf.length == 0) {
+					 finishUp('Stream closed, No data returned', null, res);
+				} else {
+					finishUp(null, new Buffer(buf.join(''), 'binary'), res);
+				}
 			});
 			res.on('end', function() {
-				finishUp('No data returned', buf, res);
+				if (buf.length == 0) {
+					 finishUp('No data returned', null, res);
+				} else {
+					finishUp(null, new Buffer(buf.join(''), 'binary'), res);
+				}
 			});
 			res.on('error', function(err) {
-				finishUp(err, buf, res);
+				if (buf.length == 0) {
+					finishUp(err, new Buffer(buf.join(''), 'binary'), res);
+				} else {
+					finishUp(err, null, res);
+				}
 			});
 		}).on("error", function(err) {
 			finishUp(err, null);
@@ -165,7 +174,8 @@ var FetchPage = function(pathname, options, callback) {
  * @param callback - the callback function to process the results
  */
 var Scrape = function(document_or_path, selectors, options, callback) {
-	var env = {};
+	var env = {},
+		iso8859_1_to_utf8 = new iconv.Iconv('ISO-8859-1', 'UTF-8');;
 
 	if (typeof arguments[2] === 'function') {
 		callback = arguments[2];
@@ -255,7 +265,13 @@ var Scrape = function(document_or_path, selectors, options, callback) {
 	};// END: makeItem(elem)
     
 	var ScrapeIt = function(src, env) {
-		if (typeof options.cleaner === 'function') {
+		var buf = new Buffer(src, 'binary');
+		// Fix encoding issues before going to jsdom.
+        if (buf.toString().match(/charset=ISO-8859-1/gim) !== null) {
+        	src = iso8859_1_to_utf8.convert(buf).toString();
+        }
+       
+        if (typeof options.cleaner === 'function') {
 			src = options.cleaner(src);
 		}
 		try {

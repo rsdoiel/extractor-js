@@ -279,6 +279,31 @@ TESTS.Spider = function () {
 	});
 };
 
+TESTS.CharacterEncoding = function () {
+	var buf_iso8859_1 = fs.readFileSync("test-data/iso8859-1.html"),
+		buf_utf8 = fs.readFileSync("test-data/utf8.html");
+
+	test_expected += 1;
+	extractor.Scrape(buf_iso8859_1.toString(),{html:'html'}, function (err, data, env) {
+		var s = 'O’Banyan said, “Hello World!” Then after a pause said humm—';
+		assert.ok(! err, "Shouldn't have an error: " + err);
+		assert.ok(data, "Should have some data.");
+		assert.ok(env, "Should have some env.");
+		assert.ok(data.html[0].innerHTML.indexOf(s), "Should find " + s);
+		test_completed += 1;
+		display("Scrape character encoding iso8859-1 completed processing (" + test_completed + "/" + test_expected + ")");
+	});
+	test_expected += 1;
+	extractor.Scrape(buf_utf8.toString(), {html:'html'}, function (err, data, env) {
+		var s = 'O’Banyan said, “Hello World!” Then after a pause said humm—';
+		assert.ok(! err, "Shouldn't have an error: " + err);
+		assert.ok(data, "Should have some data.");
+		assert.ok(env, "Should have some env.");
+		assert.ok(data.html[0].innerHTML.indexOf(s), "Should find " + s);
+		test_completed += 1;
+		display("Scrape character encoding utf8 completed processing (" + test_completed + "/" + test_expected + ")");
+	});
+};
 
 
 
