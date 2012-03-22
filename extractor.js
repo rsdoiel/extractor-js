@@ -11,7 +11,7 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.9c
+ * revision 0.0.9d
  */
 //var	util = require('util');// DEBUG
 var	url = require('url'),
@@ -19,7 +19,6 @@ var	url = require('url'),
 	path = require('path'),
 	http = require('http'),
 	https = require('https'),
-	iconv = require('iconv'),
 	querystring = require('querystring'),
 	jsdom = require('jsdom').jsdom;
 
@@ -147,11 +146,11 @@ var FetchPage = function(pathname, options, callback) {
  *	an object of selectors (an object of key/selector strings),
  *	and a callback scrape the content from the document.
  *	cleaner and transform functions will be applied if supplied.
- * @param document_or_path - the path (local or url) to the document to be processed,
+ * @param buf_or_path - a binary buffer of the document or the path (local or url) to the document to be processed,
  *	or HTML source code
  * @param selectors - an object with properties that are populated by querySelectorAll
  *	(e.g. selectors = { title: 'title', body = '.main_content'}
- *	would yeild an object with title and body properties based on the CSS
+ *	would yield an object with title and body properties based on the CSS
  *	selectors passed)
  * @param options - can include 
  *		+ cleaner - a function to cleanup the document BEFORE
@@ -173,9 +172,8 @@ var FetchPage = function(pathname, options, callback) {
  *		+ src - JavaScript source to apply to page
  * @param callback - the callback function to process the results
  */
-var Scrape = function(document_or_path, selectors, options, callback) {
-	var env = {},
-		iso8859_1_to_utf8 = new iconv.Iconv('ISO-8859-1', 'UTF-8');;
+var Scrape = function(buf_or_path, selectors, options, callback) {
+	var env = {}, document_or_path;
 
 	if (typeof arguments[2] === 'function') {
 		callback = arguments[2];
@@ -189,11 +187,11 @@ var Scrape = function(document_or_path, selectors, options, callback) {
 		throw ("selectors is not an object");
 	}
 	if (typeof document_or_path !== 'string') {
-		throw ("document or path is not a string");
+		document_or_path = buf_or_path.toString();
 	}
 
 	var defaults = {
-		"cleaner": null,
+		"cleaner": null, // cleaner takes a binary buffer and returns a string
 		"transformer": null,
 		"response" : true, // was false,
         // FIXME, adjust this to better support jsDom 2.10
@@ -223,9 +221,7 @@ var Scrape = function(document_or_path, selectors, options, callback) {
 	env.options = options;
 	if (document_or_path.indexOf('<') < 0) {
 		env.pathname = document_or_path;
-		env.source = null;
 	} else {
-		env.source = document_or_path;
 		env.pathname = null;
 	}
 
@@ -264,16 +260,17 @@ var Scrape = function(document_or_path, selectors, options, callback) {
 		return val;
 	};// END: makeItem(elem)
     
-	var ScrapeIt = function(src, env) {
-		//var buf = new Buffer(src, 'binary');
-		// Fix encoding issues before going to jsdom, 
-		// FIXME: allow for converting different incoding besides iso8859-1.
-        if (String(src).match(/charset=ISO-8859-1/gim) !== null) {
-        	src = iso8859_1_to_utf8.convert(src).toString();
-        }
+	// ScrapeIt takes a buffer and sends a buffer
+	// to the cleaner or converts it to a string.
+	// the cleaner function should take care of 
+	// any cleanup or character encoding conversion.
+	var ScrapeIt = function(buf, env) {
+		var src;
        
         if (typeof options.cleaner === 'function') {
-			src = options.cleaner(src);
+			src = options.cleaner(buf);
+		} else {
+			src = buf.toString();
 		}
 		try {
 			jsdom.env({
@@ -316,7 +313,7 @@ var Scrape = function(document_or_path, selectors, options, callback) {
 	// If pathname is a path or URL then fetch a page, otherwise process
 	// it as the HTML src.
 	if (document_or_path.indexOf('<') > -1) {
-		ScrapeIt(document_or_path, env);
+		ScrapeIt(buf_or_path, env);
 	} else {
 		FetchPage(document_or_path, options, function(err, html, env) {
 			if (err) {

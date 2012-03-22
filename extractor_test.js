@@ -8,7 +8,7 @@
  * Released under New the BSD License.
  * See: http://opensource.org/licenses/bsd-license.php
  * 
- * revision 0.0.9c
+ * revision 0.0.9d
  */
 
 var TIMEOUT = 10,
@@ -163,7 +163,7 @@ TESTS.Spider = function () {
 	});
 	// Fetch my personal cv, response true
 	test_expected += 1;
-	extractor.Spider("http://its.usc.edu/~rsdoiel/cv.html",{ response: true },  function (err, data, env) {
+	extractor.Spider("http://its.usc.edu/~rsdoiel/cv.html", { response: true },  function (err, data, env) {
 		assert.ok(! err, "Should not have error: " + err + " from " + util.inspect(env));
 		assert.equal(env.options.response, true, "Should have timeout of 1. " + util.inspect(env.options));
 		assert.ok(env !== undefined, "Should have env defined.");
@@ -295,7 +295,7 @@ TESTS.CharacterEncoding = function () {
 		display("Scrape character encoding iso8859-1 completed processing (" + test_completed + "/" + test_expected + ")");
 	});
 	test_expected += 1;
-	extractor.Scrape(buf_utf8.toString(), {html:'html'}, function (err, data, env) {
+	extractor.Scrape(buf_utf8.toString(), {html: 'html'}, function (err, data, env) {
 		var s = 'O’Banyan said, “Hello World!” Then after a pause said humm—';
 		assert.ok(! err, "Shouldn't have an error: " + err);
 		assert.ok(data, "Should have some data.");
