@@ -11,12 +11,12 @@ Periodically I wind up writing scripts to screen scrape or spider sites.  Node  
 
 extractor has four methods -
 
-* `FetchPage` - get a page from the local file system or via http/https
-* `Scrape` - A combination of FetchPage(), Cleaner(), and Transformer() which fetches the content, parses it via 
+* `fetchPage` - get a page from the local file system or via http/https
+* `scrape` - A combination of FetchPage(), Cleaner(), and Transformer() which fetches the content, parses it via 
  jsDOM/jQuery and extracting interesting parts based on the jQuery selectors pass to it creating an object with 
 the same structure as the selector object and passing it to Scrape()'s callback method. You can override the Cleaner()
 and Transformer() methods by passing in your own cleaner and transformer functions.
-* `Spider` - a utility implementation of Scrape using a fixed map for anchors, links, scripts and image tags.
+* `spider` - a utility implementation of Scrape using a fixed map for anchors, links, scripts and image tags.
 
 # Example (Scrape)
 
