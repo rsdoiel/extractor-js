@@ -13,7 +13,9 @@
  * 
  * revision 0.0.9d
  */
-//var	util = require('util');// DEBUG
+
+/*jslint devel: true, node: true, maxerr: 50, indent: 4,  vars: true, sloppy: true, stupid: false */
+
 var	url = require('url'),
 	fs = require('fs'),
 	path = require('path'),
@@ -26,20 +28,19 @@ var	url = require('url'),
 
 
 /**
- * FetchPage - read a file from the local disc or via http/https
+ * fetchPage - read a file from the local disc or via http/https
  * @param pathname - a disc path or url to the document you want to
  * read in and process with the callback.
- * @param options - a set of properties to modify FetchPage behavior (e.g. optional.response  
+ * @param options - a set of properties to modify fetchPage behavior (e.g. optional.response  
  * defaults to false).
  * @param callback - the callback you want to run when you have the file. The 
  * callback will be passed an error, data (buffer stream), and environment (e.g. the path where it came from).
  */
-var FetchPage = function(pathname, options, callback) {
-	var defaults = { response: false, method: 'GET' }, 
-		pg, parts, protocol_method = http;
+var fetchPage = function (pathname, options, callback) {
+	var defaults = { response: false, method: 'GET' }, pg, parts, protocol_method = http;
 
-	if (typeof arguments[1] === 'function') {
-		callback = arguments[1];
+	if (typeof options === 'function') {
+		callback = options;
 		options = {};
 	}
 
@@ -60,7 +61,7 @@ var FetchPage = function(pathname, options, callback) {
 		// Setup the environment to return to the callback
 		env.pathname = pathname;
 		env.options = options;
-		
+
 		if (options.response === true && res !== undefined) {
 			env.response = res;
 			if (res.headers['last-modified'] !== undefined) {
@@ -69,24 +70,23 @@ var FetchPage = function(pathname, options, callback) {
 		}
 		if (buf === undefined || buf === null) {
 			return callback(err, null, env);
-		} else {
-			return callback(null, buf, env);
 		}
+		return callback(null, buf, env);
 	};
-	
+
 
 	// Are we looking at the file system or a remote URL?
 	parts = url.parse(pathname);
-	Object.keys(parts).forEach(function(ky) {
+	Object.keys(parts).forEach(function (ky) {
 		options[ky] = parts[ky];
 	});
 
-	// FetchPage always uses a GET
+	// fetchPage always uses a GET
 	options.method = 'GET';
-	
+
 	// Process based on our expectations of where to read from.
 	if (options.protocol === undefined || options.protocol === 'file:') {
-		fs.readFile(path.normalize(options.pathname), function(err, data) {
+		fs.readFile(path.normalize(options.pathname), function (err, data) {
 			finishUp(err, data);
 		});
 	} else {
@@ -102,43 +102,43 @@ var FetchPage = function(pathname, options, callback) {
 			finishUp("ERROR: unsupported protocol for " + pathname, null);
 			break;
 		}
-		
+
 		// Force encoding to binary in order to safely handle non-utf8 pages.
 		options.encoding = 'binary';
-		pg = protocol_method.get(options, function(res) {
+		pg = protocol_method.get(options, function (res) {
 			var buf = [];
-	
-			res.on('data', function(data) {
+
+			res.on('data', function (data) {
 				if (data) {
 					buf.push(data);
 				}
 			});
-			res.on('close', function() {
-				if (buf.length == 0) {
+			res.on('close', function () {
+				if (buf.length === 0) {
 					finishUp('Stream closed, No data returned', null, res);
 				} else {
 					finishUp(null, buf.join(''), res);
 				}
 			});
-			res.on('end', function() {
-				if (buf.length == 0) {
+			res.on('end', function () {
+				if (buf.length === 0) {
 					finishUp('No data returned', null, res);
 				} else {
 					finishUp(null, buf.join(''), res);
 				}
 			});
-			res.on('error', function(err) {
-				if (buf.length == 0) {
+			res.on('error', function (err) {
+				if (buf.length === 0) {
 					finishUp(err, null, res);
 				} else {
 					finishUp(err, buf.join(''), res);
 				}
 			});
-		}).on("error", function(err) {
+		}).on("error", function (err) {
 			finishUp(err, null);
 		});
 	}
-}; /* END: FetchPage(pathname, options, callback) */
+}; /* END: fetchPage(pathname, options, callback) */
 
 
 /**
@@ -172,11 +172,11 @@ var FetchPage = function(pathname, options, callback) {
  *		+ src - JavaScript source to apply to page
  * @param callback - the callback function to process the results
  */
-var Scrape = function(buf_or_path, selectors, options, callback) {
+var scrape = function (buf_or_path, selectors, options, callback) {
 	var env = {}, document_or_path;
 
-	if (typeof arguments[2] === 'function') {
-		callback = arguments[2];
+	if (typeof options === 'function') {
+		callback = options;
 		options = {};
 	}
 
@@ -209,13 +209,13 @@ var Scrape = function(buf_or_path, selectors, options, callback) {
 		options = defaults;
 	} else {
 		// probably a cleaner way to do this.
-		Object.keys(defaults).forEach(function(ky) {
+		Object.keys(defaults).forEach(function (ky) {
 			if (options[ky] === undefined) {
 				options[ky] = defaults[ky];
 			}
 		});
 	}
-	
+
 	// Setup env to pass to callback
 	env.selectors = selectors;
 	env.options = options;
@@ -230,16 +230,18 @@ var Scrape = function(buf_or_path, selectors, options, callback) {
 	 * @param  {Object} elem NodeElement object
 	 * @return {Object}
 	 */
-	var makeItem = function(elem) {
+	var makeItem = function (elem) {
 		var val = {};
 
 		if (elem.attributes) {
 			// Here's a list of possibly 
 			// interesting attributes to extract.
-			['name', 'value', 'type', 'id', 'class', 'content', 'title',
-			'placeholder', 'contenteditable', 'checked', 'selected', 'href',
-			'src', 'alt', 'style', 'method', 'action', 'rel', 'language',
-			'lang'].forEach(function(attr_name) {
+			[
+				'name', 'value', 'type', 'id', 'class', 'content', 'title',
+				'placeholder', 'contenteditable', 'checked', 'selected',
+				'href', 'src', 'alt', 'style', 'method', 'action', 'rel',
+				'language', 'lang'
+			].forEach(function (attr_name) {
 				if (elem.hasAttribute(attr_name) && elem.getAttribute(attr_name) !== '') {
 					val[attr_name] = elem.getAttribute(attr_name);
 				}
@@ -259,14 +261,14 @@ var Scrape = function(buf_or_path, selectors, options, callback) {
 
 		return val;
 	};// END: makeItem(elem)
-    
+
 	// ScrapeIt takes a buffer and sends a buffer
 	// to the cleaner or converts it to a string.
 	// the cleaner function should take care of 
 	// any cleanup or character encoding conversion.
-	var ScrapeIt = function(buf, env) {
+	var scrapeIt = function (buf, env) {
 		var src;
-       
+
         if (typeof options.cleaner === 'function') {
 			src = options.cleaner(buf);
 		} else {
@@ -277,7 +279,7 @@ var Scrape = function(buf_or_path, selectors, options, callback) {
 				html: src,
 				src : options.src,
 				features: options.features,
-				done : function(err, window) {
+				done : function (err, window) {
 					var output = {}, val;
 					if (err) {
 						return callback(err, null, env);
@@ -295,7 +297,7 @@ var Scrape = function(buf_or_path, selectors, options, callback) {
 							// something else.
 							elems = options.transformer(ky, elems);
 						}
-						
+
 						if (elems.length > 0) {
 							output[ky] = elems;
 						}
@@ -308,19 +310,18 @@ var Scrape = function(buf_or_path, selectors, options, callback) {
 		} catch (err) {
 			return callback(err, null, env);
 		}
-	}; // END ScrapeIt(src, env)
+	}; // END scrapeIt(src, env)
 
 	// If pathname is a path or URL then fetch a page, otherwise process
 	// it as the HTML src.
 	if (document_or_path.indexOf('<') > -1) {
-		ScrapeIt(buf_or_path, env);
+		scrapeIt(buf_or_path, env);
 	} else {
-		FetchPage(document_or_path, options, function(err, html, env) {
+		fetchPage(document_or_path, options, function (err, html, env) {
 			if (err) {
 				return callback(err, null, env);
-			} else {
-				ScrapeIt(html, env);
 			}
+			scrapeIt(html, env);
 		});
 	}
 }; /* END: Scrape(document_or_path, selectors, options, callback) */
@@ -333,16 +334,16 @@ var Scrape = function(buf_or_path, selectors, options, callback) {
  * @param callback - callback for when you have all your scraped content
  * @return object with assets property and links property
  */
-var Spider = function (document_or_path, options, callback) {
-	var map = { anchors: 'a', images: 'img', scripts: 'script', links:'link' };
-	if (typeof arguments[1] === 'function') {
-		callback = arguments[1];
+var spider = function (document_or_path, options, callback) {
+	var map = { anchors: 'a', images: 'img', scripts: 'script', links: 'link' };
+	if (typeof options === 'function') {
+		callback = options;
 		options = {};
 	}
-	Scrape(document_or_path, map, options, callback);
+	scrape(document_or_path, map, options, callback);
 }; // END: Spider(document_or_path);
 
-exports.FetchPage = FetchPage;
-exports.Scrape = Scrape;
-exports.Spider = Spider;
+exports.fetchPage = fetchPage;
+exports.scrape = scrape;
+exports.spider = spider;
 
