@@ -1,6 +1,6 @@
-Spider
+spider
 ======
-revision 0.0.8
+revision 0.1.0
 --------------
 
 # Overview
@@ -14,7 +14,7 @@ markup spidered.
 ```javascript
   var extractor = require('extractor'), util = require('util');
 	
-	extractor.Spider("http://nodejs.org", { response: true }, function (err, data, env) {
+	extractor.spider("http://nodejs.org", { response: true }, function (err, data, env) {
 		if (err) {
 			console.error('ERROR: ' + err);
 		}

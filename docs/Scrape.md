@@ -1,9 +1,9 @@
-Scrape
+scrape
 ======
-revision 0.0.8
+revision 0.1.0
 --------------
 
-# Scrape(document_or_path, map, options, callback)
+# scrape(document_or_path, map, options, callback)
 
 The scrape method is used to create to extract content from HTML markup. It
 has three required parameters - document_or_path, map, and callback. It has two
@@ -91,7 +91,7 @@ font, spacing tags).
 		return val;
 	};
 	
-	extractor.Scrape("http://nodejs.org", { title: "title", div_h2: "div > h2" }, { response: true, 
+	extractor.scrape("http://nodejs.org", { title: "title", div_h2: "div > h2" }, { response: true, 
 		cleaner:clean, transformer: transform}, function (err, data, env) {
 		if (err) {
 			console.error('ERROR: ' + err);

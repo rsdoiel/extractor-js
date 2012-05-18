@@ -1,7 +1,7 @@
 extractor-js
 ============
-revision 0.0.9d
----------------
+revision 0.1.0
+--------------
 
 # Overview
 
@@ -33,7 +33,7 @@ selector = {
     };
 
 pages.forEach(function(page) {
-    extractor.Scrape(page, selector, function (err, data, env) {
+    extractor.scrape(page, selector, function (err, data, env) {
         if (err) throw err;
 
         console.log("Processed " + env.pathname);
@@ -54,7 +54,7 @@ In this example we spider the homepage of the NodeJS website and list of the lin
 ```javascript
 var extractor = require('extractor');
 
-extractor.Spider('http://nodejs.org', function(err, data, env) {
+extractor.spider('http://nodejs.org', function(err, data, env) {
     var i;
     if (err) {
         console.error("ERROR: " + err);

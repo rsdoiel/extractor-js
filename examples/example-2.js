@@ -2,7 +2,7 @@ var extractor = require('../extractor');
 
 var map = {title:'title', links: 'a' };
 
-extractor.Scrape('http://nodejs.org', map, function(err, data, env) {
+extractor.scrape('http://nodejs.org', map, function(err, data, env) {
 	var i;
 	if (err) {
 		console.error("ERROR: " + err);

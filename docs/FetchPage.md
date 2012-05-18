@@ -1,11 +1,11 @@
-FetchPage
+fetchPage
 =========
-revision 0.0.8
+revision 0.1.0
 --------------
 
-# FetchPage(pathname, options, callback)
+# fetchPage(pathname, options, callback)
 
-This is a method to simplify reading HTML documents from either local disc or via http/https connects. FetchPage() is used by Scrape() to retrieve HTML content if a URL or path is provided.
+This is a method to simplify reading HTML documents from either local disc or via http/https connects. fetchPage() is used by Scrape() to retrieve HTML content if a URL or path is provided.
 
 
 ## parameters
@@ -19,7 +19,7 @@ This is a method to simplify reading HTML documents from either local disc or vi
 ```javascript
 var extractor = require('extractor');
 
-extractor.FetchPage("http://nodejs.org",{ response: true}, function (err, data, env) {
+extractor.fetchPage("http://nodejs.org",{ response: true}, function (err, data, env) {
   if (err) {
 		console.error('ERROR: ' + err);
 	}

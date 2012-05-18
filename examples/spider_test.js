@@ -77,9 +77,9 @@ TESTS.formatRecord = function () {
 	test_completed += 1;
 };
 
-TESTS.Spider = function () {
+TESTS.spider = function () {
 	test_expected += 1;
-	assert.fail("Spider(), tests not implemented for runMaster(),runChild().");
+	assert.fail("spider(), tests not implemented for runMaster(),runChild().");
 	test_completed += 0;
 };
 
