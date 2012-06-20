@@ -58,7 +58,7 @@ if (cluster.isMaster) {
 		
 		// Fork the children
 		for (i = 0; i < numCPUs; i++ ) {
-			n.push(cluster.fork());
+			n.push(cluster.fork().process);
 			console.log("PARENT Forked child with pid: " + n[i].pid);
 
 			n[i].on('message', process_page);

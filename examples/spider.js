@@ -221,7 +221,7 @@ runMaster = function(options) {
 		}
 
 		for (i = 0; i < options.numThreads; i++ ) {
-			n.push(cluster.fork());
+			n.push(cluster.fork().process);
 			console.log("PARENT Forked child with pid: " + n[i].pid);
 			n[i].on('message', onMessageToChild);
 			n[i].on('death', onDeathOfChild);

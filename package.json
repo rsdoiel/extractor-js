@@ -1,6 +1,6 @@
 {
 	"name" : "extractor",
-	"version" : "0.1.0",
+	"version" : "0.1.1",
 	"description" : "A small utility library for retrieving and scraping web content. It targets scraping content with a unique attribute id, class or tag.",
 	"main" : "./extractor.js",
 	"repository" : {
@@ -17,7 +17,7 @@
 		"url" : "https://github.com/rsdoiel"
 	}],
 	"engines" : {
-		"node" : ">= 0.6",
+		"node" : ">= 0.7.12",
 		"npm" : ">= 1"
 	},
 	"dependencies" : {
