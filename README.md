@@ -1,7 +1,7 @@
 [![build status](https://secure.travis-ci.org/rsdoiel/extractor-js.png)](http://travis-ci.org/rsdoiel/extractor-js)
 extractor-js
 ============
-revision 0.1.0
+revision 0.1.x
 --------------
 
 # Overview
