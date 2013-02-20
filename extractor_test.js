@@ -150,27 +150,27 @@ TESTS.scrape = function () {
 TESTS.spider = function () {
 	// Test fetching my personal page at usc.edu, response false
 	test_expected += 1;
-	extractor.spider("http://its.usc.edu/~rsdoiel/index.html", { response:false },  function (err, data, env) {
+	extractor.spider("http://rsdoiel.github.com/index.html", { response:false },  function (err, data, env) {
 		assert.ok(! err, "Should not have error: " + err + " from " + util.inspect(env));
 		assert.ok(env !== undefined, "Should have env defined.");
 		assert.equal(env.options.response, false, "Should have timeout of 1. " + util.inspect(env.options));
 		assert.ok(data, "Should have data from " + env.pathname);
 		assert.ok(data.anchors !== undefined, "Should have anchors in page (" + env.pathname + ")");
-		assert.ok(data.images, "Should have at least the logo in the page.");
-		assert.ok(data.links, "Should have some links to CSS at least.");
+		//assert.ok(data.images, "Should have at least the logo in the page." + util.inspect(data));
+		//assert.ok(data.links, "Should have some links to CSS at least.");
 		test_completed += 1;
 		display("spider " + env.pathname + " completed processing (" + test_completed + "/" + test_expected + ")");
 	});
 	// Fetch my personal cv, response true
 	test_expected += 1;
-	extractor.spider("http://its.usc.edu/~rsdoiel/cv.html", { response: true },  function (err, data, env) {
+	extractor.spider("http://rsdoiel.github.com/cv.html", { response: true },  function (err, data, env) {
 		assert.ok(! err, "Should not have error: " + err + " from " + util.inspect(env));
 		assert.equal(env.options.response, true, "Should have timeout of 1. " + util.inspect(env.options));
 		assert.ok(env !== undefined, "Should have env defined.");
 		assert.ok(data, "Should have data from " + env.pathname);
 		assert.ok(data.anchors !== undefined, "Should have anchors in page (" + env.pathname + ")");
 		assert.ok(! data.images, "Should NOT have a logo on my cv. " + util.inspect(data.images));
-		assert.ok(data.links, "Should have some links to CSS at least.");
+		assert.ok(data.links, "Should have some links to CSS at least." + util.inspect(data));
 		test_completed += 1;
 		display("spider " + env.pathname + " completed processing (" + test_completed + "/" + test_expected + ")");
 	});
