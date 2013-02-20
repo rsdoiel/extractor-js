@@ -2,6 +2,13 @@
 extractor-js
 ============
 
+# Before you dive in
+
+When I originally wrote extractor-js there wasn't allot of libraries that did what I needed at the time.
+Since then a very solid library with lots of community usage called request has come along.  You should
+consider it before choosing extractor.  The URL is https://github.com/mikeal/request. Otherwise, enjoy
+extractor.
+
 # Overview
 
 Periodically I wind up writing scripts to screen scrape or spider sites.  Node  is really nice for this. extractor-js is a utility module for these types of script.
