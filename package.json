@@ -21,7 +21,8 @@
 		"npm" : ">= 1"
 	},
 	"dependencies" : {
-		"jsdom" : ">= 0.2.10"
+		"jsdom" : ">= 0.2.10",
+                "follow-redirects" : "0.0.3"
 	},
 	"scripts" : {
 		"test" : "node extractor_test.js"
