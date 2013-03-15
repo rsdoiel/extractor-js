@@ -19,7 +19,7 @@
 var	url = require('url'),
 	fs = require('fs'),
 	path = require('path'),
-	http = require('http'),
+	http = require('follow-redirects').http,
 	https = require('https'),
 	querystring = require('querystring'),
 	jsdom = require('jsdom').jsdom;

@@ -2,6 +2,10 @@
 extractor-js
 ============
 
+# FORK NOTE!
+
+This is a fork of [https://github.com/rsdoiel/extractor-js](Extractor), but adds the ability to follow 302 redirects by plugging in [https://npmjs.org/package/follow-redirects](follow-redirects) module.
+
 # Before you dive in
 
 When I originally wrote extractor-js there wasn't allot of libraries that did what I needed at the time.
